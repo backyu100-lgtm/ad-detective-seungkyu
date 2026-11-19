@@ -1,0 +1,43 @@
+name: 광고 탐정 승규 - 매일 수사
+
+on:
+  schedule:
+    - cron: "37 23 * * *"   # 매일 한국시간 오전 8:37
+  workflow_dispatch:         # Actions 탭에서 수동 실행 가능
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: 설치
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y ffmpeg
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: 수사 시작
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+        run: python main.py
+      - name: 기록 저장
+        run: |
+          git config user.name "ad-detective-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data docs
+          git commit -m "🕵️ 수사 보고서 $(TZ=Asia/Seoul date +%F)" || exit 0
+          git push

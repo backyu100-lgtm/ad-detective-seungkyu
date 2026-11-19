@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>🕵️ 광고 탐정 승규 | 広告探偵スンギュ</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1b18;--sub:#6f6a62;--line:#e4dfd5;--acc:#3b2f8f;--acc2:#efeafc;
+--a:#1f8a4c;--b:#b7791f;--c:#b23a3a;--win:#d4a017}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Pretendard","Noto Sans KR","Hiragino Sans",sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:22px 24px 8px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:24px;letter-spacing:-.5px}h1 small{display:block;font-size:12px;color:var(--sub);font-weight:500;letter-spacing:1px}
+.upd{margin-left:auto;color:var(--sub);font-size:12px}
+.report{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px 24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.stat b{font-size:26px;display:block}.stat span{font-size:12px;color:var(--sub)}
+.stat.win b{color:var(--win)}
+.tabs{display:flex;gap:6px;padding:8px 24px 0}
+.tab{border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:999px;font-size:13px;cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 24px;align-items:center}
+.filters select,.filters input{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 9px;font-size:13px}
+.filters label{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:4px}
+.count{font-size:12px;color:var(--sub);margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:6px 24px 40px}
+.ad{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .12s}
+.ad:hover{transform:translateY(-2px)}
+.thumb{aspect-ratio:4/5;background:#ddd center/cover no-repeat;position:relative}
+.badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;padding:3px 8px;border-radius:999px}
+.badge.win{background:var(--win);color:#1d1b18;font-weight:700}
+.grade{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}
+.gA{background:var(--a)}.gB{background:var(--b)}.gC{background:var(--c)}
+.vid{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:2px 7px;border-radius:6px}
+.meta{padding:10px 12px}.meta .br{font-weight:700;font-size:13px}.meta .dt{font-size:11px;color:var(--sub);margin-top:2px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{background:var(--acc2);color:var(--acc);font-size:11px;padding:2px 7px;border-radius:6px}
+.tag.p{background:#fff2d9;color:#8a5a00}.tag.r{background:#fde4e4;color:var(--c)}
+.empty{padding:40px 24px;color:var(--sub)}
+table{border-collapse:collapse;width:calc(100% - 48px);margin:10px 24px 40px;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#efebe3;font-size:12px;color:var(--sub)}
+tr.click{cursor:pointer}tr.click:hover td{background:#faf8f4}
+.modal{position:fixed;inset:0;background:rgba(20,18,15,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal.on{display:flex}
+.box{background:var(--card);border-radius:16px;max-width:980px;width:100%;max-height:92vh;overflow:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.player{background:#111;min-height:420px;display:flex;flex-direction:column}
+.player iframe{flex:1;border:0;width:100%;min-height:420px}
+.player .sw{display:flex;gap:6px;padding:8px;flex-wrap:wrap}.player .sw button{font-size:12px;border:0;border-radius:6px;padding:4px 9px;cursor:pointer}
+.info{padding:18px 20px}.info h2{margin:0 0 4px;font-size:18px}
+.info .row{font-size:13px;margin:10px 0}.info .row b{display:block;font-size:11px;color:var(--sub);margin-bottom:3px;letter-spacing:.5px}
+.info pre{white-space:pre-wrap;font-family:inherit;background:#f7f5f0;border-radius:8px;padding:10px;font-size:12.5px;margin:0;max-height:180px;overflow:auto}
+.idea{background:var(--acc2);border-radius:10px;padding:10px 12px}
+.close{position:sticky;top:0;float:right;border:0;background:none;font-size:22px;cursor:pointer}
+a{color:var(--acc)}
+@media(max-width:720px){.report{grid-template-columns:repeat(2,1fr)}.box{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:6px 12px 30px}
+header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🕵️ 광고 탐정 승규<small>広告探偵スンギュ · META AD LIBRARY JP</small></h1>
+  <div class="upd" id="upd"></div>
+</header>
+
+<section class="report" id="report"></section>
+
+<nav class="tabs">
+  <button class="tab on" data-v="ads">🗂 전체 소재</button>
+  <button class="tab" data-v="partner">🤝 협력 광고</button>
+  <button class="tab" data-v="brand">🏷 브랜드 요약</button>
+</nav>
+
+<section class="filters" id="filters">
+  <select id="fBrand"><option value="">모든 브랜드</option></select>
+  <select id="fStatus"><option value="">전체 상태</option><option value="on">게재 중</option><option value="off">종료</option><option value="new">오늘 신규</option></select>
+  <label>최소 <input id="fDays" type="number" min="0" value="0" style="width:60px">일</label>
+  <select id="fGrade"><option value="">모든 등급</option><option>A</option><option>B</option><option>C</option><option value="none">미분석</option></select>
+  <input id="fText" placeholder="소구점·문구 검색 (예: 모공)">
+  <label><input id="fPartner" type="checkbox"> 협력 광고만</label>
+  <label><input id="fRisk" type="checkbox"> 약기법 주의 숨기기</label>
+  <select id="fSort"><option value="days">게재일수순</option><option value="new">최신 발견순</option></select>
+  <span class="count" id="count"></span>
+</section>
+
+<main id="view"></main>
+
+<div class="modal" id="modal"><div class="box" id="box"></div></div>
+
+<script>
+let D = null, VIEW = "ads";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+fetch("data.json?" + Date.now()).then(r => r.json()).then(d => { D = d; init(); })
+  .catch(() => $("#view").innerHTML = '<p class="empty">아직 수사 기록이 없어요. 첫 실행 후 다시 확인해주세요.</p>');
+
+function init() {
+  $("#upd").textContent = "마지막 수사: " + D.updated;
+  const s = D.summary;
+  $("#report").innerHTML = `
+    <div class="stat" data-q="new"><b>${s.new_today}</b><span>🆕 오늘 새로 뜬 소재</span></div>
+    <div class="stat win" data-q="win"><b>${s.winning}</b><span>🏆 위닝 소재 (${D.winning_days}일+ 게재 중)</span></div>
+    <div class="stat" data-q="off"><b>${s.ended_week}</b><span>🪦 최근 7일 종료</span></div>
+    <div class="stat" data-q=""><b>${s.total}</b><span>📁 누적 수집</span></div>`;
+  document.querySelectorAll(".stat").forEach(el => el.onclick = () => {
+    const q = el.dataset.q;
+    $("#fStatus").value = q === "win" ? "on" : q; $("#fDays").value = q === "win" ? D.winning_days : 0;
+    setView("ads");
+  });
+  [...new Set(D.ads.map(a => a.brand))].sort().forEach(b => $("#fBrand").insertAdjacentHTML("beforeend", `<option>${esc(b)}</option>`));
+  document.querySelectorAll("#filters select, #filters input").forEach(el => el.oninput = render);
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => setView(t.dataset.v));
+  $("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
+  document.onkeydown = e => { if (e.key === "Escape") closeModal(); };
+  render();
+}
+
+function setView(v) {
+  VIEW = v;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.v === v));
+  render();
+}
+
+function filtered() {
+  const b = $("#fBrand").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
+        g = $("#fGrade").value, txt = $("#fText").value.trim().toLowerCase(),
+        p = $("#fPartner").checked, risk = $("#fRisk").checked;
+  let r = D.ads.filter(a =>
+    (!b || a.brand === b) &&
+    (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === D.updated)) &&
+    a.run_days >= days &&
+    (!g || (g === "none" ? !a.analysis : a.analysis?.grade === g)) &&
+    (!p || a.partner) &&
+    (!risk || !a.analysis || a.analysis.yakkiho_risk === "없음") &&
+    (!txt || [a.body, a.title, a.partner, ...(a.analysis?.appeal_points || []), a.analysis?.format, a.analysis?.hook_3s]
+              .join(" ").toLowerCase().includes(txt)));
+  const key = $("#fSort").value;
+  r.sort((x, y) => key === "new" ? (y.first_seen || "").localeCompare(x.first_seen || "") : y.run_days - x.run_days);
+  return r;
+}
+
+function render() {
+  $("#filters").style.display = VIEW === "ads" ? "flex" : "none";
+  if (VIEW === "partner") return renderPartner();
+  if (VIEW === "brand") return renderBrand();
+  const list = filtered();
+  $("#count").textContent = list.length + "개";
+  if (!list.length) return $("#view").innerHTML = '<p class="empty">조건에 맞는 소재가 없어요.</p>';
+  $("#view").innerHTML = '<div class="grid">' + list.map(card).join("") + "</div>";
+  document.querySelectorAll(".ad").forEach(el => el.onclick = () => openModal(el.dataset.id));
+}
+
+function card(a) {
+  const win = a.is_active && a.run_days >= D.winning_days, an = a.analysis;
+  const tags = (an?.appeal_points || []).slice(0, 3).map(t => `<span class="tag">${esc(t)}</span>`).join("")
+    + (a.partner ? `<span class="tag p">🤝 ${esc(a.partner)}</span>` : "")
+    + (an && an.yakkiho_risk && an.yakkiho_risk !== "없음" ? `<span class="tag r">⚠ 약기법 ${esc(an.yakkiho_risk)}</span>` : "");
+  return `<div class="ad" data-id="${a.id}">
+    <div class="thumb" style="background-image:url('${a.thumb ? "thumbs/" + a.thumb : ""}')">
+      <span class="badge ${win ? "win" : ""}">${win ? "🏆 " : ""}${a.run_days}일${a.is_active ? "" : " · 종료"}</span>
+      ${an?.grade ? `<span class="grade g${an.grade}">${an.grade}</span>` : ""}
+      ${a.media_type === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : ""}
+    </div>
+    <div class="meta"><div class="br">${esc(a.brand)}</div>
+      <div class="dt">${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
+      <div class="tags">${tags}</div></div></div>`;
+}
+
+function openModal(id) {
+  const a = D.ads.find(x => x.id === id), an = a.analysis, files = a.files || [];
+  const frame = f => `https://drive.google.com/file/d/${f.id}/preview`;
+  const player = files.length
+    ? `<iframe id="pf" src="${frame(files[0])}" allow="autoplay"></iframe>` +
+      (files.length > 1 ? `<div class="sw">${files.map((f, i) => `<button onclick="document.getElementById('pf').src='${frame(f)}'">${i + 1}번</button>`).join("")}</div>` : "")
+    : `<div style="color:#aaa;padding:20px">드라이브 파일 없음${a.thumb ? `<br><img src="thumbs/${a.thumb}" style="max-width:100%;margin-top:10px">` : ""}</div>`;
+  const row = (t, v) => v ? `<div class="row"><b>${t}</b>${v}</div>` : "";
+  $("#box").innerHTML = `
+    <div class="player">${player}</div>
+    <div class="info"><button class="close" onclick="closeModal()">×</button>
+      <h2>${esc(a.brand)} ${an?.grade ? `<span class="grade g${an.grade}" style="position:static;display:inline-grid;vertical-align:middle">${an.grade}</span>` : ""}</h2>
+      <div style="font-size:12px;color:#6f6a62">${esc(a.page_name)} · ${a.run_days}일 게재 (${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}) · <a href="${a.ad_url}" target="_blank">광고 라이브러리 ↗</a></div>
+      ${a.partner ? row("🤝 협력 크리에이터", esc(a.partner)) : ""}
+      ${an ? `
+        ${row("포맷", esc(an.format))}
+        ${row("첫 3초 훅", esc(an.hook_3s))}
+        ${row("전개 구조", esc(an.structure))}
+        ${row("소구점", (an.appeal_points || []).map(t => `<span class="tag">${esc(t)}</span>`).join(" "))}
+        ${row("따라하기 등급 · 제작 난이도 " + esc(an.production || ""), esc(an.grade_reason))}
+        ${row("오래 살아남은 이유(추정)", esc(an.why_winning))}
+        <div class="row idea"><b>💡 셀로라바이 적용안</b>${esc(an.celoraby_idea)}</div>
+        ${row("⚖️ 약기법 리스크: " + esc(an.yakkiho_risk), esc(an.yakkiho_notes))}`
+      : `<div class="row" style="color:#6f6a62">아직 AI 분석 전이에요 (일정 기간 이상 게재된 소재만 분석).</div>`}
+      ${row("광고 문구", `<pre>${esc(a.body)}</pre>`)}
+    </div>`;
+  $("#modal").classList.add("on");
+}
+function closeModal() { $("#modal").classList.remove("on"); $("#box").innerHTML = ""; }
+
+function renderPartner() {
+  const m = {};
+  D.ads.filter(a => a.partner).forEach(a => {
+    const k = a.brand + "|" + a.partner;
+    (m[k] ??= { brand: a.brand, partner: a.partner, ads: [] }).ads.push(a);
+  });
+  const rows = Object.values(m).map(g => ({ ...g,
+    n: g.ads.length, on: g.ads.filter(a => a.is_active).length,
+    avg: Math.round(g.ads.reduce((s, a) => s + a.run_days, 0) / g.ads.length),
+    max: Math.max(...g.ads.map(a => a.run_days)),
+    from: g.ads.map(a => a.start_date || a.first_seen).sort()[0],
+    to: g.ads.some(a => a.is_active) ? "게재 중" : g.ads.map(a => a.end_date || "").sort().pop() }))
+    .sort((a, b) => b.avg - a.avg);
+  if (!rows.length) return $("#view").innerHTML = '<p class="empty">아직 협력 광고가 없어요.</p>';
+  $("#view").innerHTML = `<table><tr><th>크리에이터</th><th>브랜드</th><th>협업 소재</th><th>게재 중</th><th>평균 게재일</th><th>최장</th><th>기간</th></tr>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.brand)}" data-p="${esc(r.partner)}"><td><b>${esc(r.partner)}</b></td><td>${esc(r.brand)}</td><td>${r.n}</td><td>${r.on}</td><td>${r.avg}일</td><td>${r.max}일</td><td>${esc(r.from)} ~ ${esc(r.to)}</td></tr>`).join("")}</table>`;
+  document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
+    $("#fBrand").value = tr.dataset.b; $("#fText").value = tr.dataset.p; $("#fPartner").checked = true;
+    $("#fStatus").value = ""; $("#fDays").value = 0; setView("ads");
+  });
+}
+
+function renderBrand() {
+  const m = {};
+  D.ads.forEach(a => (m[a.brand] ??= []).push(a));
+  const rows = Object.entries(m).map(([b, ads]) => {
+    const on = ads.filter(a => a.is_active), grades = { A: 0, B: 0, C: 0 };
+    ads.forEach(a => a.analysis?.grade && grades[a.analysis.grade]++);
+    const tagCount = {};
+    ads.forEach(a => (a.analysis?.appeal_points || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
+    const top = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([t, n]) => `${t}(${n})`).join(", ");
+    return { b, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
+      nw: ads.filter(a => a.first_seen === D.updated).length, partner: ads.filter(a => a.partner).length,
+      vid: ads.filter(a => a.media_type === "video").length, grades, top };
+  }).sort((a, b) => b.on - a.on);
+  const log = D.log?.brands || {};
+  $("#view").innerHTML = `<table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
+      <td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td><td>${esc(r.top) || "-"}</td><td>${log[r.b] ? (log[r.b].found ? "✅ " + log[r.b].found : "⚠ 0건") : "-"}</td></tr>`).join("")}</table>`;
+  document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
+    $("#fBrand").value = tr.dataset.b; $("#fText").value = ""; $("#fPartner").checked = false; setView("ads");
+  });
+}
+</script>
+</body>
+</html>

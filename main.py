@@ -182,4 +182,9 @@ def export(db: dict, cfg: dict, today: str, log: dict):
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        traceback.print_exc()
+        print("❌ 수사 중 오류 — 위 로그를 확인하세요")
+        sys.exit(1)

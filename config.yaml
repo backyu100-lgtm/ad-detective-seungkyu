@@ -5,24 +5,42 @@ country: JP              # 광고 라이브러리 국가 필터
 
 competitors:
   # page_id(페이스북 페이지 숫자 ID)가 있으면 가장 정확합니다.
-  # 모르면 keyword만 적어도 됩니다 → 검색 결과 중 page_names 와 이름이 맞는 광고만 수집.
-  - name: 예시브랜드
-    page_id: ""          # 예: "123456789012345"
-    keyword: "예시브랜드"
-    page_names: ["예시브랜드"]
+  # 모르면 keyword만 적어도 됩니다 → 검색 결과 중 page_names 가 이름에 포함된 광고만 수집
+  # (협력 광고는 크리에이터 페이지로 올라가므로 파트너 이름도 함께 확인).
+  # 첫 실행 후 대시보드 '브랜드 요약' 탭 / Actions 로그에서 실제 페이지명을 확인해 다듬으면 됩니다.
+  - name: Dr.Reju-All
+    page_id: ""
+    keyword: "Dr.Reju-All"
+    page_names: ["reju-all", "rejuall", "reju all", "リジュオール"]
+  - name: Anua
+    page_id: ""
+    keyword: "Anua"
+    page_names: ["anua", "アヌア"]
+  - name: numbuzin
+    page_id: ""
+    keyword: "numbuzin"
+    page_names: ["numbuzin", "ナンバーズイン"]
 
 # 셀로라바이 제품 정보 → AI가 "우리 제품 적용안"을 만들 때 기준으로 씀
 celoraby:
+  concept: "약국 코스메틱 (薬局コスメ) — 민감 피부에도 흔들림 없는 처방. 주 고객층 50대, 저비용 제작 선호"
   products:
-    - name: "(주력 제품명)"
-      appeal_points: ["(소구점1)", "(소구점2)"]
+    - name: "리투겔 ECM크림 (リトゥジェルECMクリーム) — 주력"
+      appeal_points: ["바르는 스킨부스터", "PDRN 다음은 ECM", "진피 시술 성분 ECM 모사(ECM-5)",
+                      "피부시술 리투오에서 착안", "Qoo10 랭킹 1위 다수", "민감 성분 없음·레티놀 병용 가능", "튜브형"]
+    - name: "리투겔세럼 (リトゥジェルセラム)"
+      appeal_points: ["ECM-X 콤플렉스", "ECM크림과 병용(세트)", "살짝 우윳빛 제형"]
+    - name: "펜타샷 (ポテンションペンタショット) 미용 디바이스"
+      appeal_points: ["모공 케어", "스킨케어 전 사용으로 흡수 도움"]
 
 scrape:
   max_scrolls: 30        # 브랜드당 최대 스크롤 횟수 (광고가 많으면 늘리기)
   scroll_wait_sec: 2.5
 
 analysis:
-  model: "claude-sonnet-5-5"
+  provider: "gemini"     # gemini 또는 claude
+  gemini_model: "gemini-flash-latest"   # 구글이 최신 Flash로 자동 교체해주는 별칭
+  claude_model: "claude-sonnet-5-5"
   min_run_days: 14       # 이 일수 이상 게재된 소재만 AI 분석 (비용 절약)
   max_per_run: 30        # 하루 최대 분석 개수
 

@@ -1,4 +1,4 @@
-"""Claude로 장수 소재 분석: 포맷 / 첫 3초 훅 / 소구점 / 따라하기 등급 / 셀로라바이 적용안 / 약기법 리스크."""
+"""AI(Gemini 또는 Claude)로 장수 소재 분석: 포맷 / 첫 3초 훅 / 소구점 / 따라하기 등급 / 셀로라바이 적용안 / 약기법 리스크."""
 from __future__ import annotations
 
 import base64
@@ -6,7 +6,10 @@ import json
 import re
 from pathlib import Path
 
-import anthropic
+import os
+import time
+
+import requests
 
 PROMPT = """너는 일본 화장품 퍼포먼스 광고 전문가다. 아래 경쟁사 메타 광고 소재를 분석해라.
 이미지는 소재 썸네일(영상이면 0.5초·2.5초·중간 프레임 순서)이다.
@@ -20,7 +23,8 @@ PROMPT = """너는 일본 화장품 퍼포먼스 광고 전문가다. 아래 경
 {body}
 제목/CTA: {title} / {cta}
 
-[우리 브랜드 셀로라바이(セロラバイ) 제품]
+[우리 브랜드 셀로라바이(セロラバイ)]
+컨셉: {concept}
 {products}
 
 [따라하기 등급 기준]
@@ -60,7 +64,7 @@ def _products(cfg: dict) -> str:
     return "\n".join(lines) or "- (미입력)"
 
 
-def analyze(rec: dict, run_days: int, cfg: dict, client: anthropic.Anthropic) -> dict | None:
+def analyze(rec: dict, run_days: int, cfg: dict) -> dict | None:
     frames = [f for f in rec.get("frames") or [] if Path(f).exists()][:3]
     text = PROMPT.format(
         brand=rec.get("brand"), page_name=rec.get("page_name"), run_days=run_days,
@@ -68,18 +72,47 @@ def analyze(rec: dict, run_days: int, cfg: dict, client: anthropic.Anthropic) ->
         collation=rec.get("collation_count", 1), partner=rec.get("partner") or "없음",
         duration=f"{rec.get('duration')}초" if rec.get("duration") else "-",
         body=(rec.get("body") or "")[:1500], title=rec.get("title") or "-", cta=rec.get("cta") or "-",
-        products=_products(cfg),
+        products=_products(cfg), concept=(cfg.get("celoraby") or {}).get("concept", ""),
     )
-    content = [_img_block(f) for f in frames] + [{"type": "text", "text": text}]
-    resp = client.messages.create(
-        model=cfg["analysis"]["model"], max_tokens=1200,
-        messages=[{"role": "user", "content": content}],
-    )
-    out = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-    m = re.search(r"\{.*\}", out, re.S)
+    if cfg["analysis"].get("provider", "gemini") == "claude":
+        out = _claude(frames, text, cfg)
+    else:
+        out = _gemini(frames, text, cfg)
+    m = re.search(r"\{.*\}", out or "", re.S)
     if not m:
         return None
     try:
         return json.loads(m.group(0))
     except json.JSONDecodeError:
         return None
+
+
+def _gemini(frames: list[str], text: str, cfg: dict) -> str:
+    model = cfg["analysis"].get("gemini_model", "gemini-flash-latest")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    parts = [{"inline_data": {"mime_type": "image/jpeg",
+                              "data": base64.b64encode(Path(f).read_bytes()).decode()}} for f in frames]
+    parts.append({"text": text})
+    body = {"contents": [{"parts": parts}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4}}
+    for attempt in range(3):          # 무료 등급 속도 제한(429) 대비 재시도
+        r = requests.post(url, json=body, timeout=120,
+                          headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+        if r.status_code == 429:
+            time.sleep(30 * (attempt + 1))
+            continue
+        r.raise_for_status()
+        cands = r.json().get("candidates") or []
+        if not cands:
+            return ""
+        return "".join(p.get("text", "") for p in cands[0].get("content", {}).get("parts", []))
+    return ""
+
+
+def _claude(frames: list[str], text: str, cfg: dict) -> str:
+    import anthropic
+    client = anthropic.Anthropic()
+    content = [_img_block(f) for f in frames] + [{"type": "text", "text": text}]
+    resp = client.messages.create(model=cfg["analysis"].get("claude_model", "claude-sonnet-5-5"),
+                                  max_tokens=1200, messages=[{"role": "user", "content": content}])
+    return "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")

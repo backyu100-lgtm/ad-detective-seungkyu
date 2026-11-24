@@ -1,10 +1,11 @@
-"""🕵️ 광고 탐정 승규 — 매일 실행: 수집 → 소재 저장 → AI 분석 → 대시보드 데이터 생성."""
+"""🕵️ 광고 탐정 승규 — 매일 실행: 수집 → 소재 저장 → AI(Gemini) 분석 → 대시보드 데이터 생성."""
 from __future__ import annotations
 
 import json
 import os
 import sys
 import tempfile
+import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -44,7 +45,9 @@ def main():
             traceback.print_exc()
             ads = []
         new = store.merge(db, name, ads, today)
-        log["brands"][name] = {"found": len(ads), "new": len(new)}
+        pages = getattr(scrape_competitor, "pages_seen", {})
+        log["brands"][name] = {"found": len(ads), "new": len(new), "pages_seen": pages}
+        print(f"   검색에 걸린 페이지: {pages}")
         print(f"   광고 {len(ads)}개 / 신규 {len(new)}개")
         if not ads:
             print("   ⚠ 0건 — 차단됐거나 page_id/keyword 확인 필요")
@@ -78,25 +81,26 @@ def main():
         store.save(db)
 
     # 3) 장수 소재 AI 분석
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        import anthropic
+    provider = cfg["analysis"].get("provider", "gemini")
+    key = "ANTHROPIC_API_KEY" if provider == "claude" else "GEMINI_API_KEY"
+    if os.environ.get(key):
         from analyze import analyze
-        client = anthropic.Anthropic()
         todo = [r for r in db.values()
                 if not r.get("analysis") and store.run_days(r, today) >= cfg["analysis"]["min_run_days"]]
         todo.sort(key=lambda r: -store.run_days(r, today))
         for rec in todo[: cfg["analysis"]["max_per_run"]]:
             try:
-                res = analyze(rec, store.run_days(rec, today), cfg, client)
+                res = analyze(rec, store.run_days(rec, today), cfg)
                 if res:
                     rec["analysis"] = res
                     rec["analyzed_on"] = today
                     print(f"🧠 분석 완료 {rec['brand']} {rec['id']} → {res.get('grade')}")
             except Exception as e:
                 print(f"  ! 분석 실패 {rec['id']}: {e}")
+            time.sleep(5)          # 무료 등급 속도 제한 여유
         store.save(db)
     else:
-        print("⚠ ANTHROPIC_API_KEY 없음 → AI 분석 건너뜀")
+        print(f"⚠ {key} 없음 → AI 분석 건너뜀")
 
     # 4) 대시보드 데이터
     export(db, cfg, today, log)

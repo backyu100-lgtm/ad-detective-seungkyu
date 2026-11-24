@@ -185,17 +185,26 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5) -> lis
                 break
         browser.close()
 
-    ads, seen = [], set()
+    ads, seen, pages_seen = [], set(), {}
     names = [n.lower() for n in comp.get("page_names") or []]
+    keyword_mode = not str(comp.get("page_id") or "").strip()
+    hit = lambda s: any(n in (s or "").lower() for n in names)
     for r in raws:
         ad = normalize(r)
         if ad["id"] in seen:
             continue
         seen.add(ad["id"])
-        # 키워드 검색일 땐 다른 브랜드 광고가 섞이므로 페이지명으로 거름
-        if not str(comp.get("page_id") or "").strip() and names:
-            if not any(n in ad["page_name"].lower() for n in names):
+        pages_seen[ad["page_name"]] = pages_seen.get(ad["page_name"], 0) + 1
+        # 키워드 검색일 땐 다른 브랜드/리셀러 광고가 섞이므로 페이지명으로 거름
+        if keyword_mode and names:
+            if hit(ad["page_name"]):
+                pass
+            elif ad["partner"] and hit(ad["partner"]):
+                # 크리에이터 페이지로 올라간 협력 광고 → 크리에이터를 partner 로
+                ad["page_name"], ad["partner"] = ad["partner"], ad["page_name"]
+            else:
                 continue
         ad["brand"] = comp["name"]
         ads.append(ad)
+    scrape_competitor.pages_seen = dict(sorted(pages_seen.items(), key=lambda x: -x[1])[:15])
     return ads

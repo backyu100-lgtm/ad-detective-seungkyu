@@ -44,7 +44,11 @@ def main():
     drive = None
     if os.environ.get("GOOGLE_REFRESH_TOKEN"):
         from drive import Drive
-        drive = Drive()
+        try:
+            drive = Drive()
+            print("✅ 구글 드라이브 연결 성공")
+        except Exception as e:
+            print(f"❌ 구글 드라이브 연결 실패 → 원본 업로드 없이 계속 진행합니다: {e}")
     else:
         print("⚠ 드라이브 키 없음 → 원본 업로드는 건너뜀")
 

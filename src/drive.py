@@ -14,11 +14,16 @@ ROOT_NAME = "광고탐정승규_소재보관함"
 
 class Drive:
     def __init__(self):
+        env = {k: (os.environ.get(k) or "").strip() for k in
+               ["GOOGLE_REFRESH_TOKEN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]}
+        missing = [k for k, v in env.items() if not v]
+        if missing:
+            raise RuntimeError(f"GitHub Secrets 비어 있음: {', '.join(missing)}")
         creds = Credentials(
             None,
-            refresh_token=os.environ["GOOGLE_REFRESH_TOKEN"],
-            client_id=os.environ["GOOGLE_CLIENT_ID"],
-            client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+            refresh_token=env["GOOGLE_REFRESH_TOKEN"],
+            client_id=env["GOOGLE_CLIENT_ID"],
+            client_secret=env["GOOGLE_CLIENT_SECRET"],
             token_uri="https://oauth2.googleapis.com/token",
             scopes=SCOPES,
         )

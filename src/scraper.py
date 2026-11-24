@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
 
 AD_LIB = "https://www.facebook.com/ads/library/"
+EXCLUDE = ["celoraby", "セロラバイ", "셀로라바이"]
 JST = timezone(timedelta(hours=9))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
@@ -204,7 +205,12 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5) -> lis
                 ad["page_name"], ad["partner"] = ad["partner"], ad["page_name"]
             else:
                 continue
-        ad["brand"] = comp["name"]
+        if any(x in (ad["page_name"] + " " + (ad["partner"] or "")).lower() for x in EXCLUDE):
+            continue          # 우리 브랜드(셀로라바이)는 제외
+        # 키워드 발굴(sweep)은 광고주 페이지 이름 자체를 브랜드로 사용
+        ad["brand"] = (ad["page_name"] or "(이름없음)") if comp.get("sweep") else comp["name"]
+        ad["source"] = "sweep" if comp.get("sweep") else "watch"
+        ad["keyword"] = comp.get("keyword") if comp.get("sweep") else None
         ads.append(ad)
     scrape_competitor.pages_seen = dict(sorted(pages_seen.items(), key=lambda x: -x[1])[:15])
     return ads

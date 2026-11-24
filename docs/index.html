@@ -70,7 +70,8 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 </nav>
 
 <section class="filters" id="filters">
-  <select id="fBrand"><option value="">모든 브랜드</option></select>
+  <input id="fBrand" list="brandList" placeholder="브랜드 검색 (전체)" style="width:170px"><datalist id="brandList"></datalist>
+  <select id="fSource"><option value="">전체 출처</option><option value="watch">⭐ 집중 감시</option><option value="sweep">🔎 키워드 발굴</option></select>
   <select id="fStatus"><option value="">전체 상태</option><option value="on">게재 중</option><option value="off">종료</option><option value="new">오늘 신규</option></select>
   <label>최소 <input id="fDays" type="number" min="0" value="0" style="width:60px">일</label>
   <select id="fGrade"><option value="">모든 등급</option><option>A</option><option>B</option><option>C</option><option value="none">미분석</option></select>
@@ -86,7 +87,7 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 <div class="modal" id="modal"><div class="box" id="box"></div></div>
 
 <script>
-let D = null, VIEW = "ads";
+let D = null, VIEW = "ads", LIMIT = 120;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -100,14 +101,14 @@ function init() {
     <div class="stat" data-q="new"><b>${s.new_today}</b><span>🆕 오늘 새로 뜬 소재</span></div>
     <div class="stat win" data-q="win"><b>${s.winning}</b><span>🏆 위닝 소재 (${D.winning_days}일+ 게재 중)</span></div>
     <div class="stat" data-q="off"><b>${s.ended_week}</b><span>🪦 최근 7일 종료</span></div>
-    <div class="stat" data-q=""><b>${s.total}</b><span>📁 누적 수집</span></div>`;
+    <div class="stat" data-q=""><b>${s.total}</b><span>📁 누적 수집 · 브랜드 ${s.brands ?? "-"}개</span></div>`;
   document.querySelectorAll(".stat").forEach(el => el.onclick = () => {
     const q = el.dataset.q;
     $("#fStatus").value = q === "win" ? "on" : q; $("#fDays").value = q === "win" ? D.winning_days : 0;
     setView("ads");
   });
-  [...new Set(D.ads.map(a => a.brand))].sort().forEach(b => $("#fBrand").insertAdjacentHTML("beforeend", `<option>${esc(b)}</option>`));
-  document.querySelectorAll("#filters select, #filters input").forEach(el => el.oninput = render);
+  [...new Set(D.ads.map(a => a.brand))].sort().forEach(b => $("#brandList").insertAdjacentHTML("beforeend", `<option value="${esc(b)}">`));
+  document.querySelectorAll("#filters select, #filters input").forEach(el => el.oninput = () => { LIMIT = 120; render(); });
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => setView(t.dataset.v));
   $("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
   document.onkeydown = e => { if (e.key === "Escape") closeModal(); };
@@ -121,17 +122,18 @@ function setView(v) {
 }
 
 function filtered() {
-  const b = $("#fBrand").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
+  const b = $("#fBrand").value.trim(), src = $("#fSource").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
         g = $("#fGrade").value, txt = $("#fText").value.trim().toLowerCase(),
         p = $("#fPartner").checked, risk = $("#fRisk").checked;
   let r = D.ads.filter(a =>
-    (!b || a.brand === b) &&
+    (!b || a.brand === b || a.brand.toLowerCase().includes(b.toLowerCase())) &&
+    (!src || a.source === src) &&
     (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === D.updated)) &&
     a.run_days >= days &&
     (!g || (g === "none" ? !a.analysis : a.analysis?.grade === g)) &&
     (!p || a.partner) &&
     (!risk || !a.analysis || a.analysis.yakkiho_risk === "없음") &&
-    (!txt || [a.body, a.title, a.partner, ...(a.analysis?.appeal_points || []), a.analysis?.format, a.analysis?.hook_3s]
+    (!txt || [a.body, a.title, a.partner, ...(a.keywords || []), ...(a.analysis?.appeal_points || []), a.analysis?.format, a.analysis?.hook_3s]
               .join(" ").toLowerCase().includes(txt)));
   const key = $("#fSort").value;
   r.sort((x, y) => key === "new" ? (y.first_seen || "").localeCompare(x.first_seen || "") : y.run_days - x.run_days);
@@ -145,7 +147,10 @@ function render() {
   const list = filtered();
   $("#count").textContent = list.length + "개";
   if (!list.length) return $("#view").innerHTML = '<p class="empty">조건에 맞는 소재가 없어요.</p>';
-  $("#view").innerHTML = '<div class="grid">' + list.map(card).join("") + "</div>";
+  const shown = list.slice(0, LIMIT);
+  $("#view").innerHTML = '<div class="grid">' + shown.map(card).join("") + "</div>" +
+    (list.length > LIMIT ? `<p class="empty" style="text-align:center"><button class="tab" id="more">더 보기 (${list.length - LIMIT}개 남음)</button></p>` : "");
+  if ($("#more")) $("#more").onclick = () => { LIMIT += 120; render(); };
   document.querySelectorAll(".ad").forEach(el => el.onclick = () => openModal(el.dataset.id));
 }
 
@@ -160,7 +165,7 @@ function card(a) {
       ${an?.grade ? `<span class="grade g${an.grade}">${an.grade}</span>` : ""}
       ${a.media_type === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : ""}
     </div>
-    <div class="meta"><div class="br">${esc(a.brand)}</div>
+    <div class="meta"><div class="br">${a.source === "watch" ? "⭐ " : ""}${esc(a.brand)}</div>
       <div class="dt">${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
       <div class="tags">${tags}</div></div></div>`;
 }
@@ -226,16 +231,16 @@ function renderBrand() {
     const tagCount = {};
     ads.forEach(a => (a.analysis?.appeal_points || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
     const top = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([t, n]) => `${t}(${n})`).join(", ");
-    return { b, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
+    return { b, watch: ads.some(a => a.source === "watch") ? 1 : 0, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
       nw: ads.filter(a => a.first_seen === D.updated).length, partner: ads.filter(a => a.partner).length,
       vid: ads.filter(a => a.media_type === "video").length, grades, top };
-  }).sort((a, b) => b.on - a.on);
+  }).sort((a, b) => (b.watch - a.watch) || (b.win - a.win) || (b.on - a.on)).slice(0, 150);
   const log = D.log?.brands || {};
-  $("#view").innerHTML = `<table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
-    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
-      <td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td><td>${esc(r.top) || "-"}</td><td>${log[r.b] ? (log[r.b].found ? "✅ " + log[r.b].found : "⚠ 0건") : "-"}</td></tr>`).join("")}</table>`;
+  $("#view").innerHTML = `<p style="margin:10px 24px 0;font-size:12px;color:#6f6a62">⭐ 집중 감시 → 위닝 소재 많은 순 (상위 150개 브랜드)</p><table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${r.watch ? "⭐ " : ""}${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
+      <td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td><td>${esc(r.top) || "-"}</td><td>${log[r.b] ? (log[r.b].found ? "✅ " + log[r.b].found : "⚠ 0건") : "🔎"}</td></tr>`).join("")}</table>`;
   document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
-    $("#fBrand").value = tr.dataset.b; $("#fText").value = ""; $("#fPartner").checked = false; setView("ads");
+    $("#fBrand").value = tr.dataset.b; $("#fSource").value = ""; $("#fText").value = ""; $("#fPartner").checked = false; setView("ads");
   });
 }
 </script>

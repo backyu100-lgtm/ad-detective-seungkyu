@@ -8,7 +8,8 @@ from pathlib import Path
 PATH = Path("data/ads.json")
 KEEP_FROM_SCRAPE = ["page_id", "page_name", "start_date", "end_date", "is_active", "platforms",
                     "collation_count", "collation_id", "body", "title", "cta", "link_url",
-                    "partner", "display_format", "ad_url", "brand"]
+                    "partner", "display_format", "ad_url"]
+STALE_DAYS = 3   # 키워드 발굴 광고가 며칠 안 보이면 종료로 추정
 
 
 def load() -> dict:
@@ -30,23 +31,45 @@ def merge(db: dict, brand: str, ads: list[dict], today: str) -> list[dict]:
         seen_ids.add(ad["id"])
         rec = db.get(ad["id"])
         if rec is None:
-            rec = {"id": ad["id"], "first_seen": today, "files": [], "analysis": None}
+            rec = {"id": ad["id"], "first_seen": today, "files": [], "analysis": None,
+                   "keywords": [], "brand": ad["brand"], "source": ad["source"]}
             db[ad["id"]] = rec
             new.append(rec)
-            rec["_media"] = ad["media"]          # 다운로드용(저장 전 제거)
+        # 감시 브랜드(watch)로 잡힌 적 있으면 그 이름이 우선
+        if ad["source"] == "watch" or rec.get("source") != "watch":
+            rec["brand"], rec["source"] = ad["brand"], ad["source"]
+        if ad.get("keyword") and ad["keyword"] not in rec.setdefault("keywords", []):
+            rec["keywords"].append(ad["keyword"])
+        rec["_media"] = ad["media"]              # 오늘 받은 새 링크(만료 전), 저장 전 제거
         for k in KEEP_FROM_SCRAPE:
             if ad.get(k) not in (None, "", []):
                 rec[k] = ad[k]
         rec["is_active"] = ad["is_active"]
         rec["last_seen"] = today
 
-    # 수집이 정상(1건 이상)일 때만: 이 브랜드인데 오늘 안 보인 광고 → 종료 처리
-    if ads:
+    # 감시 브랜드: 수집이 정상(1건 이상)일 때, 오늘 안 보인 광고 → 종료 처리
+    if ads and brand is not None:
         for rec in db.values():
-            if rec.get("brand") == brand and rec["id"] not in seen_ids and rec.get("is_active"):
+            if rec.get("source") == "watch" and rec.get("brand") == brand \
+                    and rec["id"] not in seen_ids and rec.get("is_active"):
                 rec["is_active"] = False
                 rec["end_date"] = rec.get("end_date") or rec.get("last_seen")
     return new
+
+
+def expire_stale(db: dict, today: str):
+    """키워드 발굴 광고는 검색 순위에서 밀려 안 보일 수 있으므로 며칠 연속 안 보이면 종료로 추정."""
+    for rec in db.values():
+        if rec.get("source") == "sweep" and rec.get("is_active") and rec.get("last_seen"):
+            if (date.fromisoformat(today) - date.fromisoformat(rec["last_seen"])).days >= STALE_DAYS:
+                rec["is_active"] = False
+                rec["end_date"] = rec["last_seen"]
+
+
+def save_clean(db: dict):
+    for rec in db.values():
+        rec.pop("_media", None)
+    save(db)
 
 
 def run_days(rec: dict, today: str) -> int:

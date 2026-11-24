@@ -61,3 +61,20 @@ def make_previews(ad_id: str, path: Path, kind: str) -> dict:
         frames.append(str(out))
     _ff(["-i", str(path), "-vf", "scale=360:-2", "-q:v", "6", str(thumb)])
     return {"thumb": thumb.name if thumb.exists() else None, "frames": frames}
+
+
+def save_thumb(ad_id: str, media: list[dict]) -> str | None:
+    """발견 즉시 썸네일만 가볍게 저장 (영상 본편은 조건 충족 시 따로 다운로드)."""
+    THUMBS.mkdir(parents=True, exist_ok=True)
+    thumb = THUMBS / f"{ad_id}.jpg"
+    for m in media:
+        url = m.get("preview") if m["type"] == "video" else m.get("url")
+        if not url:
+            continue
+        tmp = THUMBS / f"_{ad_id}.tmp"
+        if download(url, tmp):
+            ok = _ff(["-i", str(tmp), "-vf", "scale=300:-2", "-q:v", "7", str(thumb)])
+            tmp.unlink(missing_ok=True)
+            if ok:
+                return thumb.name
+    return None

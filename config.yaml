@@ -3,6 +3,7 @@
 
 country: JP              # 광고 라이브러리 국가 필터
 
+# ① 집중 감시 브랜드: 신규 소재를 발견 즉시 전부 저장
 competitors:
   # page_id(페이스북 페이지 숫자 ID)가 있으면 가장 정확합니다.
   # 모르면 keyword만 적어도 됩니다 → 검색 결과 중 page_names 가 이름에 포함된 광고만 수집
@@ -20,6 +21,31 @@ competitors:
     page_id: ""
     keyword: "numbuzin"
     page_names: ["numbuzin", "ナンバーズイン"]
+
+# ② 키워드 발굴: 이 검색어로 일본에 광고 중인 모든 광고주(수백 개 브랜드)를 자동 수집
+#    → 썸네일은 전부 저장, 원본(영상/이미지)은 download_min_days 이상 살아남은 소재만 드라이브 저장
+sweeps:
+  keywords:
+    - 韓国コスメ
+    - 美容液
+    - クリーム
+    - 化粧水
+    - 毛穴
+    - ほうれい線
+    - ハリ
+    - 乾燥肌
+    - 敏感肌
+    - PDRN
+    - ECM
+    - スキンブースター
+    - レチノール
+    - シカ
+    - ビタミンC
+    - メガ割
+    - Qoo10
+  max_scrolls: 40              # 검색어당 스크롤 (늘리면 더 많이, 대신 오래 걸림)
+  download_min_days: 14        # 이 일수 이상 게재된 소재만 원본 저장
+  max_downloads_per_run: 300   # 하루 원본 저장 상한
 
 # 셀로라바이 제품 정보 → AI가 "우리 제품 적용안"을 만들 때 기준으로 씀
 celoraby:
@@ -42,7 +68,7 @@ analysis:
   gemini_model: "gemini-flash-latest"   # 구글이 최신 Flash로 자동 교체해주는 별칭
   claude_model: "claude-sonnet-5-5"
   min_run_days: 14       # 이 일수 이상 게재된 소재만 AI 분석 (비용 절약)
-  max_per_run: 30        # 하루 최대 분석 개수
+  max_per_run: 60        # 하루 최대 분석 개수 (Gemini 무료 등급 한도 내)
 
 report:
   winning_days: 30       # 이 일수 이상 게재 중이면 '위닝 소재'

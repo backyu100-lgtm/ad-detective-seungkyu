@@ -7,7 +7,7 @@
   - 🔎 **키워드 발굴**(`sweeps`): 美容液·毛穴·PDRN 같은 검색어로 일본에서 광고하는 **모든 광고주(수백 개 브랜드)**를 자동으로 수집합니다. 썸네일은 전부 저장하고, 원본은 14일 이상 살아남은 소재만 저장합니다. 효율 없는 소재까지 쌓이지 않게 하기 위해서입니다.
 - 원본 소재(이미지·영상)는 **승규님 구글 드라이브**에 저장됩니다.
 - 오래 게재된 소재는 **AI(기본 Gemini)가 분석**합니다: 포맷, 첫 3초 훅, 소구점, A/B/C 등급, 셀로라바이 적용안, 약기법 리스크.
-- 대시보드(GitHub Pages)에서 필터링하고, 영상을 바로 재생할 수 있습니다.
+- 대시보드(GitHub Pages)에서 필터링하고, 영상을 바로 재생할 수 있습니다. 대시보드는 **비밀번호로 잠겨** 있습니다. 데이터가 암호화돼 있어서 저장소가 공개 상태여도 비밀번호 없이는 내용을 볼 수 없습니다.
 
 ## 처음 한 번만 하는 설정
 
@@ -32,11 +32,12 @@
 
 | 이름 | 값 |
 |---|---|
+| `DASHBOARD_PASSWORD` | 대시보드 비밀번호 (수집 기록·분석 결과를 이 비밀번호로 암호화) |
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey)에서 발급한 키 (무료 등급 있음) |
 | `GOOGLE_CLIENT_ID` | 4번의 클라이언트 ID |
 | `GOOGLE_CLIENT_SECRET` | 4번의 보안 비밀번호 |
 | `GOOGLE_REFRESH_TOKEN` | 5번의 Refresh token |
-| `ANTHROPIC_API_KEY` | (선택) Claude로 분석할 때만. `config.yaml`의 `provider: claude` |
+| `ANTHROPIC_API_KEY` | (선택) [Claude Console](https://console.anthropic.com/) 키 — 위닝 소재 상위 10개를 Claude로 한 번 더 심층 분석 |
 
 ### 4. 대시보드 켜기
 **Settings → Pages**에서 Source를 "Deploy from a branch"로, Branch를 `main`, 폴더를 `/docs`로 지정합니다.

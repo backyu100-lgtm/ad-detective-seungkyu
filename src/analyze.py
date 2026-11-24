@@ -64,7 +64,7 @@ def _products(cfg: dict) -> str:
     return "\n".join(lines) or "- (미입력)"
 
 
-def analyze(rec: dict, run_days: int, cfg: dict) -> dict | None:
+def analyze(rec: dict, run_days: int, cfg: dict, provider: str | None = None) -> dict | None:
     frames = [f for f in rec.get("frames") or [] if Path(f).exists()][:3]
     text = PROMPT.format(
         brand=rec.get("brand"), page_name=rec.get("page_name"), run_days=run_days,
@@ -74,7 +74,7 @@ def analyze(rec: dict, run_days: int, cfg: dict) -> dict | None:
         body=(rec.get("body") or "")[:1500], title=rec.get("title") or "-", cta=rec.get("cta") or "-",
         products=_products(cfg), concept=(cfg.get("celoraby") or {}).get("concept", ""),
     )
-    if cfg["analysis"].get("provider", "gemini") == "claude":
+    if (provider or cfg["analysis"].get("provider", "gemini")) == "claude":
         out = _claude(frames, text, cfg)
     else:
         out = _gemini(frames, text, cfg)

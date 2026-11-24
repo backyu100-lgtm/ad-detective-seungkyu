@@ -67,6 +67,7 @@ analysis:
   provider: "gemini"     # gemini 또는 claude
   gemini_model: "gemini-flash-latest"   # 구글이 최신 Flash로 자동 교체해주는 별칭
   claude_model: "claude-sonnet-5-5"
+  claude_deep_per_run: 10   # 위닝 소재 상위 N개는 Claude로 한 번 더 심층 분석 (ANTHROPIC_API_KEY 있을 때)
   min_run_days: 14       # 이 일수 이상 게재된 소재만 AI 분석 (비용 절약)
   max_per_run: 60        # 하루 최대 분석 개수 (Gemini 무료 등급 한도 내)
 

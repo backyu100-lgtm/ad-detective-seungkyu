@@ -51,14 +51,28 @@ tr.click{cursor:pointer}tr.click:hover td{background:#faf8f4}
 .idea{background:var(--acc2);border-radius:10px;padding:10px 12px}
 .close{position:sticky;top:0;float:right;border:0;background:none;font-size:22px;cursor:pointer}
 a{color:var(--acc)}
+#lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:20}
+#lock form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;width:320px;text-align:center}
+#lock input[type=password]{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:15px;margin:14px 0 8px}
+#lock button{width:100%;border:0;border-radius:8px;padding:10px;background:var(--ink);color:#fff;font-size:14px;cursor:pointer}
+#lock .err{color:var(--c);font-size:12px;min-height:16px}
+.claude{border:1px solid #d9cff7;border-radius:10px;padding:10px 12px;margin-top:12px}
+.claude h3{margin:0 0 4px;font-size:13px;color:var(--acc)}
 @media(max-width:720px){.report{grid-template-columns:repeat(2,1fr)}.box{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:6px 12px 30px}
 header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 </style>
 </head>
 <body>
+<div id="lock"><form id="lockForm">
+  <div style="font-size:32px">🕵️</div><b>광고 탐정 승규</b>
+  <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password" autofocus>
+  <label style="font-size:12px;color:#6f6a62"><input type="checkbox" id="remember" checked> 이 기기에서 기억하기</label>
+  <div class="err" id="err"></div>
+  <button>수사 기록 열기</button>
+</form></div>
 <header>
   <h1>🕵️ 광고 탐정 승규<small>広告探偵スンギュ · META AD LIBRARY JP</small></h1>
-  <div class="upd" id="upd"></div>
+  <div class="upd"><span id="upd"></span> · <a href="#" onclick="store.del('adpw');location.reload();return false">잠그기</a></div>
 </header>
 
 <section class="report" id="report"></section>
@@ -91,8 +105,35 @@ let D = null, VIEW = "ads", LIMIT = 120;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-fetch("data.json?" + Date.now()).then(r => r.json()).then(d => { D = d; init(); })
-  .catch(() => $("#view").innerHTML = '<p class="empty">아직 수사 기록이 없어요. 첫 실행 후 다시 확인해주세요.</p>');
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decrypt(enc, pw) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(enc.salt), iterations: enc.iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, key, b64(enc.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+                del(k) { try { localStorage.removeItem(k); } catch {} } };
+async function unlock(pw, remember) {
+  let r = await fetch("data.enc.json?" + Date.now());
+  if (!r.ok) {   // 비밀번호 미설정(평문) 상태
+    r = await fetch("data.json?" + Date.now());
+    if (!r.ok) throw new Error("empty");
+    D = await r.json();
+  } else {
+    D = await decrypt(await r.json(), pw);
+  }
+  if (remember) store.set("adpw", pw); else store.del("adpw");
+  $("#lock").remove(); init();
+}
+$("#lockForm").onsubmit = e => {
+  e.preventDefault(); $("#err").textContent = "확인 중...";
+  unlock($("#pw").value, $("#remember").checked).catch(err =>
+    $("#err").textContent = err.message === "empty" ? "아직 수사 기록이 없어요 (첫 실행 전)" : "비밀번호가 맞지 않아요");
+};
+if (store.get("adpw")) unlock(store.get("adpw"), true).catch(() => store.del("adpw"));
 
 function init() {
   $("#upd").textContent = "마지막 수사: " + D.updated;
@@ -194,6 +235,12 @@ function openModal(id) {
         <div class="row idea"><b>💡 셀로라바이 적용안</b>${esc(an.celoraby_idea)}</div>
         ${row("⚖️ 약기법 리스크: " + esc(an.yakkiho_risk), esc(an.yakkiho_notes))}`
       : `<div class="row" style="color:#6f6a62">아직 AI 분석 전이에요 (일정 기간 이상 게재된 소재만 분석).</div>`}
+      ${a.analysis_claude ? `<div class="claude"><h3>🧠 Claude 심층 분석 · 등급 ${esc(a.analysis_claude.grade)}</h3>
+        ${row("첫 3초 훅", esc(a.analysis_claude.hook_3s))}
+        ${row("전개 구조", esc(a.analysis_claude.structure))}
+        ${row("오래 살아남은 이유", esc(a.analysis_claude.why_winning))}
+        <div class="row idea"><b>💡 셀로라바이 적용안 (Claude)</b>${esc(a.analysis_claude.celoraby_idea)}</div>
+        ${row("⚖️ 약기법: " + esc(a.analysis_claude.yakkiho_risk), esc(a.analysis_claude.yakkiho_notes))}</div>` : ""}
       ${row("광고 문구", `<pre>${esc(a.body)}</pre>`)}
     </div>`;
   $("#modal").classList.add("on");

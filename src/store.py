@@ -5,7 +5,10 @@ import json
 from datetime import date
 from pathlib import Path
 
-PATH = Path("data/ads.json")
+import vault
+
+PATH = Path("data/ads.json")          # 비밀번호 미설정 시
+ENC_PATH = Path("data/ads.enc.json")   # 비밀번호 설정 시 (암호화)
 KEEP_FROM_SCRAPE = ["page_id", "page_name", "start_date", "end_date", "is_active", "platforms",
                     "collation_count", "collation_id", "body", "title", "cta", "link_url",
                     "partner", "display_format", "ad_url"]
@@ -13,6 +16,9 @@ STALE_DAYS = 3   # 키워드 발굴 광고가 며칠 안 보이면 종료로 추
 
 
 def load() -> dict:
+    pw = vault.password()
+    if pw and ENC_PATH.exists():
+        return vault.decrypt(ENC_PATH.read_text(encoding="utf-8"), pw)
     if PATH.exists():
         return json.loads(PATH.read_text(encoding="utf-8"))
     return {}
@@ -20,7 +26,12 @@ def load() -> dict:
 
 def save(db: dict):
     PATH.parent.mkdir(parents=True, exist_ok=True)
-    PATH.write_text(json.dumps(db, ensure_ascii=False, indent=1), encoding="utf-8")
+    pw = vault.password()
+    if pw:
+        ENC_PATH.write_text(vault.encrypt(db, pw), encoding="utf-8")
+        PATH.unlink(missing_ok=True)       # 평문 기록은 지움
+    else:
+        PATH.write_text(json.dumps(db, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def merge(db: dict, brand: str, ads: list[dict], today: str) -> list[dict]:

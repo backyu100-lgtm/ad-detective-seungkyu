@@ -20,6 +20,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 import store  # noqa: E402
+import vault  # noqa: E402
 from scraper import scrape_competitor  # noqa: E402
 from media import download, make_previews, save_thumb  # noqa: E402
 
@@ -103,6 +104,24 @@ def main():
     else:
         print(f"⚠ {key} 없음 → AI 분석 건너뜀")
 
+    # 3-2) Claude 심층 분석: 위닝 소재 상위 N개만 (Claude 토큰 절약)
+    deep_n = cfg["analysis"].get("claude_deep_per_run", 10)
+    if provider != "claude" and deep_n and os.environ.get("ANTHROPIC_API_KEY"):
+        from analyze import analyze
+        win = cfg["report"]["winning_days"]
+        todo = [r for r in db.values() if not r.get("analysis_claude") and r.get("frames")
+                and store.run_days(r, today) >= win]
+        todo.sort(key=lambda r: (r.get("source") != "watch", -store.run_days(r, today)))
+        for rec in todo[:deep_n]:
+            try:
+                res = analyze(rec, store.run_days(rec, today), cfg, provider="claude")
+                if res:
+                    rec["analysis_claude"] = res
+                    print(f"🧠 Claude 심층 분석 {rec['brand']} {rec['id']} → {res.get('grade')}")
+            except Exception as e:
+                print(f"  ! Claude 분석 실패 {rec['id']}: {e}")
+        store.save(db)
+
     # 4) 대시보드 데이터
     export(db, cfg, today, log)
 
@@ -142,7 +161,7 @@ def export(db: dict, cfg: dict, today: str, log: dict):
         rows.append({k: r.get(k) for k in [
             "id", "brand", "source", "keywords", "page_name", "start_date", "end_date", "first_seen",
             "last_seen", "is_active", "partner", "collation_count", "body", "title", "cta", "ad_url",
-            "thumb", "files", "media_type", "duration", "analysis", "platforms"]} | {"run_days": d})
+            "thumb", "files", "media_type", "duration", "analysis", "analysis_claude", "platforms"]} | {"run_days": d})
     week_ago = (datetime.fromisoformat(today) - timedelta(days=7)).date().isoformat()
     summary = {
         "new_today": sum(1 for r in rows if r["first_seen"] == today),
@@ -152,7 +171,13 @@ def export(db: dict, cfg: dict, today: str, log: dict):
         "brands": len({r["brand"] for r in rows}),
     }
     out = {"updated": today, "winning_days": win, "summary": summary, "log": log, "ads": rows}
-    Path("docs/data.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    pw = vault.password()
+    if pw:   # 대시보드 데이터는 비밀번호로 암호화해서 공개
+        Path("docs/data.enc.json").write_text(vault.encrypt(out, pw), encoding="utf-8")
+        Path("docs/data.json").unlink(missing_ok=True)
+    else:
+        print("⚠ DASHBOARD_PASSWORD 없음 → 대시보드 데이터가 암호화되지 않습니다")
+        Path("docs/data.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
     print(f"📋 오늘의 수사 보고서: {summary}")
 
 

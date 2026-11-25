@@ -12,7 +12,7 @@
 ## 처음 한 번만 하는 설정
 
 ### 1. 경쟁사·키워드 등록
-`config.yaml`의 `competitors`(집중 감시)와 `sweeps.keywords`(발굴 검색어)를 수정하고, `celoraby.products`에 제품과 소구점을 입력합니다.
+집중 감시 브랜드, 수집 키워드, 차단 광고주는 대시보드 **⚙️ 수사 설정**에서 추가하거나 삭제합니다. 내용은 `docs/settings.json`에 저장됩니다. `config.yaml`에서는 `celoraby.products`에 제품과 소구점을 입력합니다.
 
 ### 2. 구글 드라이브 연결 (승규님 계정, 브라우저만으로 가능)
 1. [Google Cloud Console](https://console.cloud.google.com/)에서 새 프로젝트 `ad-detective`를 만듭니다.
@@ -49,3 +49,9 @@
 - 수집 결과가 0건이면 Actions 로그에 ⚠가 표시됩니다. 메타가 차단했거나 page_id/keyword가 틀렸을 수 있습니다.
 - AI 분석은 `analysis.min_run_days`(기본 14일) 이상 게재된 소재만, 하루 최대 30개까지 합니다. 비용을 줄이기 위해서입니다.
 - 내려받은 경쟁사 소재는 사내 레퍼런스로만 쓰고, 그대로 재사용하지 마세요.
+
+## 대시보드 ⚙️ 수사 설정
+- **GitHub 키**: [키 만들기](https://github.com/settings/personal-access-tokens/new)에서 Repository access를 `ad-detective-seungkyu`로 지정합니다. 권한은 **Contents**와 **Actions** 모두 Read and write로 설정하고, 만든 키를 대시보드에 한 번 붙여넣습니다. 키는 그 기기 브라우저에만 저장됩니다.
+- **🔍 전체 수사 / ⚡ 빠른 수사**: 버튼을 누르면 즉시 실행됩니다. 빠른 수사는 집중 감시 브랜드만 수집합니다.
+- 자동 실행 일정: 매일 08:37에 전체 수사, 13:07·18:07·22:07에 빠른 수사가 돌아갑니다. 메가와리 같은 행사 광고를 빨리 잡기 위해서입니다.
+- **🚫 차단**: 관련 없는 광고주를 차단하면 대시보드에서 바로 숨겨집니다. 다음 수사부터 수집하지 않고, 기존 기록과 드라이브 파일도 휴지통으로 이동합니다.

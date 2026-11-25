@@ -27,15 +27,63 @@ from media import download, make_previews, save_thumb  # noqa: E402
 JST = timezone(timedelta(hours=9))
 
 
-def targets(cfg: dict):
-    for c in cfg.get("competitors") or []:
+def load_settings() -> dict:
+    p = Path("docs/settings.json")
+    s = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    s.setdefault("watch", []); s.setdefault("keywords", []); s.setdefault("blocked_pages", [])
+    return s
+
+
+def targets(cfg: dict, st: dict, mode: str):
+    for c in st["watch"]:
+        c = {"page_id": "", "keyword": c.get("name"), "page_names": [c.get("name", "").lower()], **c}
         yield c, cfg["scrape"]["max_scrolls"]
-    for kw in cfg.get("sweeps", {}).get("keywords") or []:
+    if mode == "watch":          # 빠른 수사: 집중 감시 브랜드만
+        return
+    for kw in st["keywords"]:
         yield {"name": f"🔎 {kw}", "keyword": kw, "sweep": True}, cfg["sweeps"].get("max_scrolls", 40)
+
+
+def apply_blocks(db: dict, st: dict, drive):
+    """🚫 차단한 광고주: 수집 기록·썸네일·프레임·드라이브 파일까지 삭제."""
+    blocked = {b.lower() for b in st["blocked_pages"]}
+    if not blocked:
+        return
+    gone = [r for r in db.values() if (r.get("page_name") or "").lower() in blocked]
+    for rec in gone:
+        for f in rec.get("files") or []:
+            if drive:
+                try:
+                    drive.trash(f["id"])
+                except Exception as e:
+                    print(f"  ! 드라이브 삭제 실패 {f['id']}: {e}")
+        for fr in rec.get("frames") or []:
+            Path(fr).unlink(missing_ok=True)
+        if rec.get("thumb"):
+            (Path("docs/thumbs") / rec["thumb"]).unlink(missing_ok=True)
+        del db[rec["id"]]
+    if gone:
+        print(f"🚫 차단 광고주 소재 {len(gone)}개 삭제 (드라이브 휴지통으로 이동)")
+
+
+def prune_frames(db: dict):
+    """분석이 끝났고 이미 종료된 소재의 분석용 프레임은 지워서 저장소 용량을 아낀다."""
+    n = 0
+    for rec in db.values():
+        if rec.get("analysis") and not rec.get("is_active") and rec.get("frames"):
+            for fr in rec["frames"]:
+                Path(fr).unlink(missing_ok=True)
+            rec["frames"] = []
+            n += 1
+    if n:
+        print(f"🧹 종료된 소재 프레임 정리 {n}개")
 
 
 def main():
     cfg = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+    st = load_settings()
+    mode = (os.environ.get("MODE") or "full").strip()
+    print(f"🕵️ 수사 모드: {'⚡ 빠른 수사(집중 감시만)' if mode == 'watch' else '전체 수사'}")
     today = datetime.now(JST).date().isoformat()
     month = today[:7]
     db = store.load()
@@ -52,14 +100,18 @@ def main():
     else:
         print("⚠ 드라이브 키 없음 → 원본 업로드는 건너뜀")
 
+    apply_blocks(db, st, drive)
+
     # 1) 수집
-    for comp, scrolls in targets(cfg):
+    blocked = {b.lower() for b in st["blocked_pages"]}
+    for comp, scrolls in targets(cfg, st, mode):
         print(f"🔎 {comp['name']} 수사 중...")
         try:
             ads = scrape_competitor(comp, cfg.get("country", "JP"), scrolls, cfg["scrape"]["scroll_wait_sec"])
         except Exception:
             traceback.print_exc()
             ads = []
+        ads = [a for a in ads if (a.get("page_name") or "").lower() not in blocked]
         new = store.merge(db, None if comp.get("sweep") else comp["name"], ads, today)
         pages = getattr(scrape_competitor, "pages_seen", {})
         entry = {"found": len(ads), "new": len(new), "pages_seen": pages}
@@ -73,7 +125,8 @@ def main():
             rec["media_type"] = media[0]["type"] if media else "none"
             rec["media_count"] = len(media)
         time.sleep(3)
-    store.expire_stale(db, today)
+    if mode != "watch":
+        store.expire_stale(db, today)
 
     # 2) 원본 소재 저장 (감시 브랜드 = 전부 / 키워드 발굴 = N일 이상 살아남은 것만)
     min_days = cfg.get("sweeps", {}).get("download_min_days", 14)
@@ -126,6 +179,9 @@ def main():
                 print(f"  ! Claude 분석 실패 {rec['id']}: {e}")
         store.save(db)
 
+    prune_frames(db)
+    store.save(db)
+
     # 4) 대시보드 데이터
     export(db, cfg, today, log)
 
@@ -165,7 +221,7 @@ def export(db: dict, cfg: dict, today: str, log: dict):
         rows.append({k: r.get(k) for k in [
             "id", "brand", "source", "keywords", "page_name", "start_date", "end_date", "first_seen",
             "last_seen", "is_active", "partner", "collation_count", "body", "title", "cta", "ad_url",
-            "thumb", "files", "media_type", "duration", "analysis", "analysis_claude", "platforms"]} | {"run_days": d})
+            "thumb", "files", "media_type", "media_count", "display_format", "duration", "analysis", "analysis_claude", "platforms"]} | {"run_days": d})
     week_ago = (datetime.fromisoformat(today) - timedelta(days=7)).date().isoformat()
     summary = {
         "new_today": sum(1 for r in rows if r["first_seen"] == today),
@@ -174,7 +230,7 @@ def export(db: dict, cfg: dict, today: str, log: dict):
         "total": len(rows),
         "brands": len({r["brand"] for r in rows}),
     }
-    out = {"updated": today, "winning_days": win, "summary": summary, "log": log, "ads": rows}
+    out = {"updated": datetime.now(JST).strftime("%Y-%m-%d %H:%M"), "today": today, "winning_days": win, "summary": summary, "log": log, "ads": rows}
     pw = vault.password()
     if pw:   # 대시보드 데이터는 비밀번호로 암호화해서 공개
         Path("docs/data.enc.json").write_text(vault.encrypt(out, pw), encoding="utf-8")

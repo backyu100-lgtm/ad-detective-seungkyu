@@ -1,0 +1,54 @@
+{
+ "_설명": "대시보드 ⚙️ 수사 설정에서 수정됩니다. 직접 고쳐도 됩니다.",
+ "watch": [
+  {
+   "name": "Dr.Reju-All",
+   "page_id": "",
+   "keyword": "Dr.Reju-All",
+   "page_names": [
+    "reju-all",
+    "rejuall",
+    "reju all",
+    "リジュオール"
+   ]
+  },
+  {
+   "name": "Anua",
+   "page_id": "",
+   "keyword": "Anua",
+   "page_names": [
+    "anua",
+    "アヌア"
+   ]
+  },
+  {
+   "name": "numbuzin",
+   "page_id": "",
+   "keyword": "numbuzin",
+   "page_names": [
+    "numbuzin",
+    "ナンバーズイン"
+   ]
+  }
+ ],
+ "keywords": [
+  "韓国コスメ",
+  "美容液",
+  "クリーム",
+  "化粧水",
+  "毛穴",
+  "ほうれい線",
+  "ハリ",
+  "乾燥肌",
+  "敏感肌",
+  "PDRN",
+  "ECM",
+  "スキンブースター",
+  "レチノール",
+  "シカ",
+  "ビタミンC",
+  "メガ割",
+  "Qoo10"
+ ],
+ "blocked_pages": []
+}

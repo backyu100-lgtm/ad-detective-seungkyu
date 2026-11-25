@@ -55,3 +55,6 @@ class Drive:
         f = self.svc.files().create(body={"name": name, "parents": [parent]},
                                     media_body=media, fields="id").execute()
         return f["id"]
+
+    def trash(self, file_id: str):
+        self.svc.files().update(fileId=file_id, body={"trashed": True}).execute()

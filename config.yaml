@@ -1,48 +1,12 @@
 # 🕵️ 광고 탐정 승규 (広告探偵スンギュ) 설정 파일
-# 경쟁사를 추가/삭제하려면 competitors 목록만 고치면 됩니다.
 
 country: JP              # 광고 라이브러리 국가 필터
 
-# ① 집중 감시 브랜드: 신규 소재를 발견 즉시 전부 저장
-competitors:
-  # page_id(페이스북 페이지 숫자 ID)가 있으면 가장 정확합니다.
-  # 모르면 keyword만 적어도 됩니다 → 검색 결과 중 page_names 가 이름에 포함된 광고만 수집
-  # (협력 광고는 크리에이터 페이지로 올라가므로 파트너 이름도 함께 확인).
-  # 첫 실행 후 대시보드 '브랜드 요약' 탭 / Actions 로그에서 실제 페이지명을 확인해 다듬으면 됩니다.
-  - name: Dr.Reju-All
-    page_id: ""
-    keyword: "Dr.Reju-All"
-    page_names: ["reju-all", "rejuall", "reju all", "リジュオール"]
-  - name: Anua
-    page_id: ""
-    keyword: "Anua"
-    page_names: ["anua", "アヌア"]
-  - name: numbuzin
-    page_id: ""
-    keyword: "numbuzin"
-    page_names: ["numbuzin", "ナンバーズイン"]
+# 집중 감시 브랜드 / 수집 키워드 / 차단 광고주 목록은 docs/settings.json 에 있습니다
+# (대시보드 ⚙️ 수사 설정 화면에서 추가·삭제)
 
-# ② 키워드 발굴: 이 검색어로 일본에 광고 중인 모든 광고주(수백 개 브랜드)를 자동 수집
-#    → 썸네일은 전부 저장, 원본(영상/이미지)은 download_min_days 이상 살아남은 소재만 드라이브 저장
+# 키워드 발굴 옵션
 sweeps:
-  keywords:
-    - 韓国コスメ
-    - 美容液
-    - クリーム
-    - 化粧水
-    - 毛穴
-    - ほうれい線
-    - ハリ
-    - 乾燥肌
-    - 敏感肌
-    - PDRN
-    - ECM
-    - スキンブースター
-    - レチノール
-    - シカ
-    - ビタミンC
-    - メガ割
-    - Qoo10
   max_scrolls: 40              # 검색어당 스크롤 (늘리면 더 많이, 대신 오래 걸림)
   download_min_days: 14        # 이 일수 이상 게재된 소재만 원본 저장
   max_downloads_per_run: 300   # 하루 원본 저장 상한

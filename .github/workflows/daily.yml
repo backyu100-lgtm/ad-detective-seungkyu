@@ -2,8 +2,15 @@ name: 광고 탐정 승규 - 매일 수사
 
 on:
   schedule:
-    - cron: "37 23 * * *"   # 매일 한국시간 오전 8:37
-  workflow_dispatch:         # Actions 탭에서 수동 실행 가능
+    - cron: "37 23 * * *"     # 매일 한국시간 오전 8:37 — 전체 수사
+    - cron: "7 4,9,13 * * *"   # 한국시간 13:07·18:07·22:07 — ⚡ 빠른 수사(집중 감시 브랜드만)
+  workflow_dispatch:           # 대시보드 '수사 시작' 버튼 / Actions 탭에서 수동 실행
+    inputs:
+      mode:
+        description: "full = 전체 수사, watch = 집중 감시 브랜드만"
+        default: full
+        type: choice
+        options: [full, watch]
 
 permissions:
   contents: write
@@ -29,6 +36,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: 수사 시작
         env:
+          MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '37 23 * * *' && 'full' || 'watch') || inputs.mode || 'full' }}
           DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -41,6 +49,10 @@ jobs:
         run: |
           git config user.name "ad-detective-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data docs
-          git commit -m "🕵️ 수사 보고서 $(TZ=Asia/Seoul date +%F)" || exit 0
-          git push
+          git add -A data docs
+          git commit -m "🕵️ 수사 보고서 $(TZ=Asia/Seoul date '+%F %H:%M')" || exit 0
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin main && git push && exit 0
+            sleep 5
+          done
+          exit 1

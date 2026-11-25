@@ -50,7 +50,7 @@ def make_previews(ad_id: str, path: Path, kind: str) -> dict:
         for i, t in enumerate(points):
             out = FRAMES / f"{ad_id}_{i}.jpg"
             if _ff(["-ss", f"{t:.2f}", "-i", str(path), "-frames:v", "1",
-                    "-vf", "scale=640:-2", "-q:v", "5", str(out)]):
+                    "-vf", "scale=512:-2", "-q:v", "6", str(out)]):
                 frames.append(str(out))
         if frames:
             _ff(["-i", frames[0], "-vf", "scale=360:-2", "-q:v", "6", str(thumb)])

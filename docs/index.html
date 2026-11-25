@@ -32,7 +32,15 @@ h1{margin:0;font-size:24px;letter-spacing:-.5px}h1 small{display:block;font-size
 .grade{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}
 .gA{background:var(--a)}.gB{background:var(--b)}.gC{background:var(--c)}
 .vid{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:2px 7px;border-radius:6px}
-.meta{padding:10px 12px}.meta .br{font-weight:700;font-size:13px}.meta .dt{font-size:11px;color:var(--sub);margin-top:2px}
+.meta{padding:10px 12px}.blk{float:right;border:0;background:none;cursor:pointer;opacity:.35;font-size:13px;padding:0}.blk:hover{opacity:1}
+.set{padding:6px 24px 40px;display:grid;gap:14px;max-width:920px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel h3{margin:0 0 8px;font-size:15px}.panel p{margin:4px 0;font-size:12.5px;color:var(--sub)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chip{background:#f1ede5;border-radius:999px;padding:4px 6px 4px 11px;font-size:12.5px}
+.chip button{border:0;background:none;cursor:pointer;color:var(--sub);font-size:13px}
+.panel input{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:13px}
+.btn{border:0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;background:var(--ink);color:#fff}.btn.sub{background:#efebe3;color:var(--ink)}
+.runs div{font-size:12.5px;margin:3px 0}.meta .br{font-weight:700;font-size:13px}.meta .dt{font-size:11px;color:var(--sub);margin-top:2px}
 .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{background:var(--acc2);color:var(--acc);font-size:11px;padding:2px 7px;border-radius:6px}
 .tag.p{background:#fff2d9;color:#8a5a00}.tag.r{background:#fde4e4;color:var(--c)}
 .empty{padding:40px 24px;color:var(--sub)}
@@ -81,6 +89,7 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
   <button class="tab on" data-v="ads">🗂 전체 소재</button>
   <button class="tab" data-v="partner">🤝 협력 광고</button>
   <button class="tab" data-v="brand">🏷 브랜드 요약</button>
+  <button class="tab" data-v="settings">⚙️ 수사 설정</button>
 </nav>
 
 <section class="filters" id="filters">
@@ -92,6 +101,7 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
   <input id="fText" placeholder="소구점·문구 검색 (예: 모공)">
   <label><input id="fPartner" type="checkbox"> 협력 광고만</label>
   <label><input id="fRisk" type="checkbox"> 약기법 주의 숨기기</label>
+  <select id="fType"><option value="">모든 유형</option><option value="video">🎬 영상</option><option value="image">🖼 이미지</option><option value="carousel">🗂 카드뉴스</option></select>
   <select id="fSort"><option value="days">게재일수순</option><option value="new">최신 발견순</option></select>
   <span class="count" id="count"></span>
 </section>
@@ -101,7 +111,7 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 <div class="modal" id="modal"><div class="box" id="box"></div></div>
 
 <script>
-let D = null, VIEW = "ads", LIMIT = 120;
+let D = null, VIEW = "ads", LIMIT = 120, TODAY = "", SET = { watch: [], keywords: [], blocked_pages: [] }, SHA = null;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -135,8 +145,10 @@ $("#lockForm").onsubmit = e => {
 };
 if (store.get("adpw")) unlock(store.get("adpw"), true).catch(() => store.del("adpw"));
 
-function init() {
+async function init() {
+  TODAY = D.today || D.updated;
   $("#upd").textContent = "마지막 수사: " + D.updated;
+  await loadSettings();
   const s = D.summary;
   $("#report").innerHTML = `
     <div class="stat" data-q="new"><b>${s.new_today}</b><span>🆕 오늘 새로 뜬 소재</span></div>
@@ -166,10 +178,12 @@ function filtered() {
   const b = $("#fBrand").value.trim(), src = $("#fSource").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
         g = $("#fGrade").value, txt = $("#fText").value.trim().toLowerCase(),
         p = $("#fPartner").checked, risk = $("#fRisk").checked;
-  let r = D.ads.filter(a =>
+  const ty = $("#fType").value;
+  let r = visibleAds().filter(a =>
+    (!ty || mtype(a) === ty) &&
     (!b || a.brand === b || a.brand.toLowerCase().includes(b.toLowerCase())) &&
     (!src || a.source === src) &&
-    (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === D.updated)) &&
+    (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === TODAY)) &&
     a.run_days >= days &&
     (!g || (g === "none" ? !a.analysis : a.analysis?.grade === g)) &&
     (!p || a.partner) &&
@@ -181,10 +195,19 @@ function filtered() {
   return r;
 }
 
+const qa = x => "decodeURIComponent(&quot;" + encodeURIComponent(x ?? "").replace(/'/g, "%27") + "&quot;)";
+const blockedSet = () => new Set(SET.blocked_pages.map(x => x.toLowerCase()));
+function visibleAds() { const b = blockedSet(); return D.ads.filter(a => !b.has((a.page_name || "").toLowerCase())); }
+function mtype(a) {
+  if ((a.display_format || "").toUpperCase().includes("CAROUSEL") || (a.media_count || 0) > 1) return "carousel";
+  return a.media_type === "video" ? "video" : "image";
+}
+
 function render() {
   $("#filters").style.display = VIEW === "ads" ? "flex" : "none";
   if (VIEW === "partner") return renderPartner();
   if (VIEW === "brand") return renderBrand();
+  if (VIEW === "settings") return renderSettings();
   const list = filtered();
   $("#count").textContent = list.length + "개";
   if (!list.length) return $("#view").innerHTML = '<p class="empty">조건에 맞는 소재가 없어요.</p>';
@@ -206,7 +229,7 @@ function card(a) {
       ${an?.grade ? `<span class="grade g${an.grade}">${an.grade}</span>` : ""}
       ${a.media_type === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : ""}
     </div>
-    <div class="meta"><div class="br">${a.source === "watch" ? "⭐ " : ""}${esc(a.brand)}</div>
+    <div class="meta"><div class="br">${a.source === "watch" ? "⭐ " : ""}${esc(a.brand)}<button class="blk" title="관련 없는 광고주 차단" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button></div>
       <div class="dt">${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
       <div class="tags">${tags}</div></div></div>`;
 }
@@ -222,6 +245,7 @@ function openModal(id) {
   $("#box").innerHTML = `
     <div class="player">${player}</div>
     <div class="info"><button class="close" onclick="closeModal()">×</button>
+      <button class="btn sub" style="float:right;margin:2px 8px 0 0;padding:5px 10px;font-size:12px" onclick="blockPage(D.ads.find(x=>x.id==='${a.id}').page_name)">🚫 이 광고주 차단</button>
       <h2>${esc(a.brand)} ${an?.grade ? `<span class="grade g${an.grade}" style="position:static;display:inline-grid;vertical-align:middle">${an.grade}</span>` : ""}</h2>
       <div style="font-size:12px;color:#6f6a62">${esc(a.page_name)} · ${a.run_days}일 게재 (${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}) · <a href="${a.ad_url}" target="_blank">광고 라이브러리 ↗</a></div>
       ${a.partner ? row("🤝 협력 크리에이터", esc(a.partner)) : ""}
@@ -271,24 +295,157 @@ function renderPartner() {
 
 function renderBrand() {
   const m = {};
-  D.ads.forEach(a => (m[a.brand] ??= []).push(a));
+  visibleAds().forEach(a => (m[a.brand] ??= []).push(a));
+  const watchNames = new Set(SET.watch.map(w => w.name));
   const rows = Object.entries(m).map(([b, ads]) => {
     const on = ads.filter(a => a.is_active), grades = { A: 0, B: 0, C: 0 };
     ads.forEach(a => a.analysis?.grade && grades[a.analysis.grade]++);
     const tagCount = {};
     ads.forEach(a => (a.analysis?.appeal_points || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
     const top = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([t, n]) => `${t}(${n})`).join(", ");
-    return { b, watch: ads.some(a => a.source === "watch") ? 1 : 0, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
-      nw: ads.filter(a => a.first_seen === D.updated).length, partner: ads.filter(a => a.partner).length,
+    return { b, watch: (watchNames.has(b) || ads.some(a => a.source === "watch")) ? 1 : 0, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
+      nw: ads.filter(a => a.first_seen === TODAY).length, partner: ads.filter(a => a.partner).length,
       vid: ads.filter(a => a.media_type === "video").length, grades, top };
   }).sort((a, b) => (b.watch - a.watch) || (b.win - a.win) || (b.on - a.on)).slice(0, 150);
   const log = D.log?.brands || {};
-  $("#view").innerHTML = `<p style="margin:10px 24px 0;font-size:12px;color:#6f6a62">⭐ 집중 감시 → 위닝 소재 많은 순 (상위 150개 브랜드)</p><table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
-    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${r.watch ? "⭐ " : ""}${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
+  $("#view").innerHTML = `<p style="margin:10px 24px 0;font-size:12px;color:#6f6a62">⭐ 집중 감시 → 위닝 소재 많은 순 (상위 150개) · ☆ 누르면 집중 감시에 추가</p><table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${r.watch ? "⭐ " : `<button class="blk" style="float:none;opacity:.6" title="집중 감시에 추가" onclick="event.stopPropagation();addWatch(${qa(r.b)})">☆</button> `}${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
       <td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td><td>${esc(r.top) || "-"}</td><td>${log[r.b] ? (log[r.b].found ? "✅ " + log[r.b].found : "⚠ 0건") : "🔎"}</td></tr>`).join("")}</table>`;
   document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
     $("#fBrand").value = tr.dataset.b; $("#fSource").value = ""; $("#fText").value = ""; $("#fPartner").checked = false; setView("ads");
   });
+}
+
+// ---------- ⚙️ 수사 설정 (GitHub 연동) ----------
+const OWNER = location.hostname.endsWith("github.io") ? location.hostname.split(".")[0] : "backyu100-lgtm";
+const REPO = location.hostname.endsWith("github.io") ? (location.pathname.split("/")[1] || "ad-detective-seungkyu") : "ad-detective-seungkyu";
+const token = () => store.get("ghtoken");
+const u8b64 = str => btoa(unescape(encodeURIComponent(str)));
+const b64u8 = b => decodeURIComponent(escape(atob(b.replace(/\n/g, ""))));
+async function gh(path, opts = {}) {
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}${path}`, { ...opts, headers: {
+    Authorization: `Bearer ${token()}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
+    ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+  if (!r.ok && r.status !== 204) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0, 120)}`);
+  return r.status === 204 ? null : r.json();
+}
+async function loadSettings() {
+  try {
+    if (token()) {
+      const f = await gh(`/contents/docs/settings.json?ref=main&t=${Date.now()}`);
+      SET = JSON.parse(b64u8(f.content)); SHA = f.sha;
+    } else {
+      SET = await (await fetch("settings.json?" + Date.now())).json();
+    }
+  } catch (e) { console.warn(e); }
+  SET.watch ??= []; SET.keywords ??= []; SET.blocked_pages ??= [];
+}
+async function saveSettings(msg) {
+  if (!token()) { alert("⚙️ 수사 설정 탭에서 GitHub 키를 먼저 등록해주세요."); setView("settings"); return false; }
+  for (let i = 0; i < 2; i++) {
+    try {
+      const r = await gh("/contents/docs/settings.json", { method: "PUT", body: JSON.stringify({
+        message: "⚙️ " + msg, content: u8b64(JSON.stringify(SET, null, 1)), sha: SHA, branch: "main" }) });
+      SHA = r.content.sha; return true;
+    } catch (e) {
+      if (i === 0 && /409|422/.test(e.message)) { const cur = SET; await loadSettings();   // 다른 곳에서 바뀌었으면 합쳐서 재시도
+        for (const k of ["watch", "keywords", "blocked_pages"]) SET[k] = mergeList(SET[k], cur[k]); continue; }
+      alert("저장 실패: " + e.message); return false;
+    }
+  }
+}
+const keyOf = x => typeof x === "string" ? x : x.name;
+const mergeList = (a, b) => { const m = new Map(); [...a, ...b].forEach(x => m.set(keyOf(x), x)); return [...m.values()]; };
+
+async function blockPage(name) {
+  if (!name) return;
+  const n = visibleAds().filter(a => a.page_name === name).length;
+  if (!confirm(`'${name}' 광고주를 차단할까요?\n\n• 이 광고주 소재 ${n}개가 바로 숨겨져요\n• 다음 수사부터 수집하지 않아요\n• 다음 수사 때 드라이브 파일도 휴지통으로 이동해요`)) return;
+  if (SET.blocked_pages.includes(name)) return;
+  SET.blocked_pages.push(name);
+  if (await saveSettings(`차단: ${name}`)) { closeModal(); render(); }
+  else SET.blocked_pages = SET.blocked_pages.filter(x => x !== name);
+}
+async function unblock(name) {
+  SET.blocked_pages = SET.blocked_pages.filter(x => x !== name);
+  if (await saveSettings(`차단 해제: ${name}`)) render();
+}
+async function addWatch(name, pageRef = "", aliases = "") {
+  name = (name || "").trim(); if (!name) return;
+  if (SET.watch.some(w => w.name === name)) return alert("이미 집중 감시 중이에요.");
+  const id = (pageRef.match(/view_all_page_id=(\d+)/) || pageRef.match(/[?&]id=(\d+)/) || pageRef.match(/^\s*(\d{6,})\s*$/) || [])[1] || "";
+  const names = [name, ...aliases.split(",")].map(x => x.trim().toLowerCase()).filter(Boolean);
+  SET.watch.push({ name, page_id: id, keyword: name, page_names: [...new Set(names)] });
+  if (await saveSettings(`집중 감시 추가: ${name}`)) { alert(`⭐ '${name}' 집중 감시에 추가했어요.\n'수사 시작'을 누르면 바로 수집해요.`); render(); }
+  else SET.watch.pop();
+}
+async function removeWatch(name) {
+  if (!confirm(`'${name}' 집중 감시를 해제할까요? (지금까지 모은 소재는 남아요)`)) return;
+  SET.watch = SET.watch.filter(w => w.name !== name);
+  if (await saveSettings(`집중 감시 해제: ${name}`)) render();
+}
+async function addKeyword(kw) {
+  kw = (kw || "").trim(); if (!kw) return;
+  if (SET.keywords.includes(kw)) return alert("이미 있는 키워드예요.");
+  SET.keywords.push(kw);
+  if (await saveSettings(`키워드 추가: ${kw}`)) render(); else SET.keywords.pop();
+}
+async function removeKeyword(kw) {
+  SET.keywords = SET.keywords.filter(k => k !== kw);
+  if (await saveSettings(`키워드 삭제: ${kw}`)) render();
+}
+async function runNow(mode) {
+  if (!token()) return alert("GitHub 키를 먼저 등록해주세요.");
+  if (!confirm(mode === "watch" ? "⚡ 집중 감시 브랜드만 빠르게 수사할까요? (수 분)" : "🔍 전체 수사를 시작할까요? (1~2시간)")) return;
+  try { await gh("/actions/workflows/daily.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: "main", inputs: { mode } }) });
+    alert("수사를 시작했어요! 끝나면 새로고침하면 반영돼요 (반영까지 1~2분 더 걸릴 수 있어요)."); setTimeout(showRuns, 3000);
+  } catch (e) { alert("실행 실패: " + e.message); }
+}
+async function showRuns() {
+  const box = $("#runs"); if (!box || !token()) return;
+  try {
+    const r = await gh("/actions/runs?per_page=4");
+    const ico = x => x.status !== "completed" ? "🟡 진행 중" : x.conclusion === "success" ? "✅ 완료" : x.conclusion === "cancelled" ? "⚪ 취소" : "❌ 실패";
+    box.innerHTML = r.workflow_runs.map(x => `<div>${ico(x)} · ${new Date(x.created_at).toLocaleString("ko-KR")} · ${esc(x.display_title)} <a href="${x.html_url}" target="_blank">로그 ↗</a></div>`).join("") || "<div>실행 기록 없음</div>";
+  } catch (e) { box.textContent = "실행 기록을 불러오지 못했어요: " + e.message; }
+}
+function saveToken() {
+  const t = $("#tok").value.trim(); if (!t) return;
+  store.set("ghtoken", t); loadSettings().then(render);
+}
+function renderSettings() {
+  const has = !!token();
+  const chip = (label, fn) => `<span class="chip">${esc(label)} <button onclick="${fn}">✕</button></span>`;
+  $("#view").innerHTML = `<div class="set">
+    <div class="panel"><h3>🔑 GitHub 연결 ${has ? "✅" : ""}</h3>
+      ${has ? `<p>연결됨 (이 기기에 저장). <a href="#" onclick="store.del('ghtoken');render();return false">연결 해제</a></p>` : `
+      <p>버튼으로 설정을 바꾸고 수사를 시작하려면 키가 한 번 필요해요.</p>
+      <p>① <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">GitHub 키 만들기 ↗</a> → Repository access: <b>Only select → ${REPO}</b> → Permissions: <b>Contents · Actions = Read and write</b> → Generate</p>
+      <p>② 만든 키(github_pat_...)를 아래에 붙여넣기</p>
+      <input id="tok" type="password" placeholder="github_pat_..." style="width:60%"> <button class="btn" onclick="saveToken()">저장</button>`}
+    </div>
+    <div class="panel"><h3>🔍 수사 시작</h3>
+      <p>매일 08:37 전체 수사 + 13:07·18:07·22:07 ⚡ 빠른 수사(집중 감시만)가 자동으로 돌아요.</p>
+      <div style="display:flex;gap:8px;margin:10px 0"><button class="btn" onclick="runNow('full')">🔍 전체 수사 시작</button><button class="btn sub" onclick="runNow('watch')">⚡ 빠른 수사 (집중 감시만)</button></div>
+      <div class="runs" id="runs">${has ? "불러오는 중..." : ""}</div>
+    </div>
+    <div class="panel"><h3>⭐ 집중 감시 브랜드 (${SET.watch.length})</h3>
+      <p>새 소재를 발견하는 즉시 원본까지 드라이브에 저장해요.</p>
+      <div class="chips">${SET.watch.map(w => chip(w.name + (w.page_id ? " · ID" : ""), `removeWatch(${qa(w.name)})`)).join("")}</div>
+      <input id="wName" placeholder="브랜드명 (예: VT)" style="width:24%"> <input id="wPage" placeholder="(선택) 광고 라이브러리 링크 또는 페이지 ID" style="width:34%">
+      <input id="wAlias" placeholder="(선택) 다른 표기, 쉼표로 (예: ブイティー)" style="width:26%">
+      <button class="btn" onclick="addWatch($('#wName').value,$('#wPage').value,$('#wAlias').value)">추가</button>
+    </div>
+    <div class="panel"><h3>🔎 수집 키워드 (${SET.keywords.length})</h3>
+      <p>이 검색어로 일본에서 광고하는 모든 광고주를 수집해요. 원본은 14일 이상 살아남은 소재만 저장.</p>
+      <div class="chips">${SET.keywords.map(k => chip(k, `removeKeyword(${qa(k)})`)).join("")}</div>
+      <input id="kw" placeholder="새 키워드 (예: 美白)" onkeydown="if(event.key==='Enter')addKeyword(this.value)"> <button class="btn" onclick="addKeyword($('#kw').value)">추가</button>
+    </div>
+    <div class="panel"><h3>🚫 차단한 광고주 (${SET.blocked_pages.length})</h3>
+      <p>수집하지 않고, 기존 소재와 드라이브 파일도 다음 수사 때 정리돼요. ✕ 누르면 차단 해제.</p>
+      <div class="chips">${SET.blocked_pages.map(b => chip(b, `unblock(${qa(b)})`)).join("") || "<p>없음</p>"}</div>
+    </div></div>`;
+  showRuns();
 }
 </script>
 </body>

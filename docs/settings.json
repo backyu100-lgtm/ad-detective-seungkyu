@@ -138,6 +138,15 @@
   "sirene",
   "Lana Jewelry"
  ],
- "brands": [],
+ "brands": [
+  {
+   "name": "Bioheal.boh japan",
+   "page_id": "",
+   "keyword": "Bioheal.boh japan",
+   "page_names": [
+    "bioheal.boh japan"
+   ]
+  }
+ ],
  "aliases": {}
 }

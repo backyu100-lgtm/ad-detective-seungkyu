@@ -66,8 +66,29 @@ a{color:var(--acc)}
 #lock .err{color:var(--c);font-size:12px;min-height:16px}
 .claude{border:1px solid #d9cff7;border-radius:10px;padding:10px 12px;margin-top:12px}
 .claude h3{margin:0 0 4px;font-size:13px;color:var(--acc)}
+.search{display:flex;gap:8px;padding:4px 24px 6px}
+.search input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;background:var(--card)}
+.search button{border:0;border-radius:10px;padding:0 16px;background:var(--acc);color:#fff;font-size:13px;cursor:pointer}
+.qchips{padding:0 24px;font-size:12px;color:var(--sub)}
+.tag.ch{background:#e6f3ea;color:#1f6b3a}.tag.cat{background:#eef1f6;color:#3a4a66}
+.guess{color:var(--sub);font-weight:500}.guess.q{color:#b7791f}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-top:6px}
+.mini div{cursor:pointer;font-size:10.5px;color:var(--sub)}.mini .t{aspect-ratio:4/5;border-radius:8px;background:#ddd center/cover;margin-bottom:3px;position:relative}
+.mini .t span{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:1px 5px;font-size:10px}
+.bp{padding:6px 24px 40px;display:grid;gap:14px}
+.bp .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bp h2{margin:0;font-size:22px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}.kpis div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--sub)}.kpis b{display:block;font-size:18px;color:var(--ink)}
+.kwc{display:flex;flex-wrap:wrap;gap:6px}.kwc span{background:#f1ede5;border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}.kwc span i{font-style:normal;color:var(--sub);margin-left:4px;font-size:11px}
+.tl{display:grid;gap:8px}.tl .d{font-size:12px;font-weight:700;margin-top:4px}
+.cloud{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;justify-content:center;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:160px}
+.cloud span{cursor:pointer;line-height:1.15}.cloud span:hover{text-decoration:underline}
+.per{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.up{color:#c0392b;font-weight:700}.dn{color:#2b6cb0}
+.small{font-size:12px;color:var(--sub)}
+.tbl-sm td,.tbl-sm th{padding:7px 9px}
+.act button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer;margin-right:2px}
 @media(max-width:720px){.report{grid-template-columns:repeat(2,1fr)}.box{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:6px 12px 30px}
-header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
+header,.report,.tabs,.filters,.search,.bp,.set,.qchips{padding-left:12px;padding-right:12px}}
 </style>
 </head>
 <body>
@@ -85,23 +106,32 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 
 <section class="report" id="report"></section>
 
+<form class="search" id="searchForm">
+  <input id="q" placeholder="🔎 무엇이든 찾아보세요 — 예) 수분 광채 피부를 강조한 영상 광고, 메가와리 할인 카드뉴스">
+  <button>찾기</button>
+</form>
+<div class="qchips" id="qinfo"></div>
+
 <nav class="tabs">
   <button class="tab on" data-v="ads">🗂 전체 소재</button>
+  <button class="tab" data-v="trend">📈 카피 트렌드</button>
   <button class="tab" data-v="partner">🤝 협력 광고</button>
-  <button class="tab" data-v="brand">🏷 브랜드 요약</button>
+  <button class="tab" data-v="brand">🏷 브랜드</button>
   <button class="tab" data-v="settings">⚙️ 수사 설정</button>
 </nav>
 
 <section class="filters" id="filters">
-  <input id="fBrand" list="brandList" placeholder="브랜드 검색 (전체)" style="width:170px"><datalist id="brandList"></datalist>
-  <select id="fSource"><option value="">전체 출처</option><option value="watch">⭐ 집중 감시</option><option value="sweep">🔎 키워드 발굴</option></select>
-  <select id="fStatus"><option value="">전체 상태</option><option value="on">게재 중</option><option value="off">종료</option><option value="new">오늘 신규</option></select>
-  <label>최소 <input id="fDays" type="number" min="0" value="0" style="width:60px">일</label>
+  <input id="fBrand" list="brandList" placeholder="브랜드 검색 (전체)" style="width:160px"><datalist id="brandList"></datalist>
+  <select id="fSource"><option value="">전체 출처</option><option value="watch">⭐ 집중 감시</option><option value="brand">📋 일반 수집</option><option value="sweep">🔎 키워드 발굴</option></select>
+  <select id="fStatus"><option value="">전체 상태</option><option value="on">게재 중</option><option value="off">종료</option><option value="new">오늘 신규</option><option value="winend">🏆 종료된 위닝</option></select>
+  <label>최소 <input id="fDays" type="number" min="0" value="0" style="width:56px">일</label>
   <select id="fGrade"><option value="">모든 등급</option><option>A</option><option>B</option><option>C</option><option value="none">미분석</option></select>
-  <input id="fText" placeholder="소구점·문구 검색 (예: 모공)">
+  <select id="fType"><option value="">모든 유형</option><option value="video">🎬 영상</option><option value="image">🖼 이미지</option><option value="carousel">🗂 카드뉴스</option></select>
+  <select id="fCat"><option value="">모든 카테고리</option></select>
+  <select id="fCh"><option value="">모든 랜딩</option></select>
+  <input id="fText" placeholder="문구·소구점 검색" style="width:140px">
   <label><input id="fPartner" type="checkbox"> 협력 광고만</label>
   <label><input id="fRisk" type="checkbox"> 약기법 주의 숨기기</label>
-  <select id="fType"><option value="">모든 유형</option><option value="video">🎬 영상</option><option value="image">🖼 이미지</option><option value="carousel">🗂 카드뉴스</option></select>
   <select id="fSort"><option value="days">게재일수순</option><option value="new">최신 발견순</option></select>
   <span class="count" id="count"></span>
 </section>
@@ -111,10 +141,14 @@ header,.report,.tabs,.filters{padding-left:12px;padding-right:12px}}
 <div class="modal" id="modal"><div class="box" id="box"></div></div>
 
 <script>
-let D = null, VIEW = "ads", LIMIT = 120, TODAY = "", SET = { watch: [], keywords: [], blocked_pages: [] }, SHA = null;
+let D = null, VIEW = "ads", LIMIT = 120, TODAY = "", SHA = null, BRAND = null, AIQ = null, TREND = { unit: "week", off: 0 };
+let SET = { watch: [], brands: [], keywords: [], blocked_pages: [], aliases: {} };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const qa = x => "decodeURIComponent(&quot;" + encodeURIComponent(x ?? "").replace(/'/g, "%27") + "&quot;)";
+const CATS = ["클렌징", "토너·패드", "세럼·앰플", "크림", "마스크팩", "선케어", "메이크업", "디바이스", "바디·헤어", "이너뷰티"];
 
+// ---------- 잠금 해제 ----------
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 async function decrypt(enc, pw) {
   const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
@@ -128,7 +162,7 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
                 del(k) { try { localStorage.removeItem(k); } catch {} } };
 async function unlock(pw, remember) {
   let r = await fetch("data.enc.json?" + Date.now());
-  if (!r.ok) {   // 비밀번호 미설정(평문) 상태
+  if (!r.ok) {
     r = await fetch("data.json?" + Date.now());
     if (!r.ok) throw new Error("empty");
     D = await r.json();
@@ -145,6 +179,30 @@ $("#lockForm").onsubmit = e => {
 };
 if (store.get("adpw")) unlock(store.get("adpw"), true).catch(() => store.del("adpw"));
 
+// ---------- 공통 ----------
+const isTier = (a, t) => a.source === t;
+function brandOf(a) {
+  if (a.source === "watch" || a.source === "brand") return a.brand;
+  return SET.aliases[a.page_name] || a.page_name || a.brand;
+}
+function guessOf(page) { return SET.aliases[page] ? null : (D.brand_guess || {})[page] || null; }
+function brandLabel(a) {
+  const b = brandOf(a), page = a.page_name || "";
+  if (b && page && b !== page) return `${esc(page)} <span class="guess">(${esc(b)})</span>`;
+  const g = guessOf(page);
+  return g ? `${esc(page)} <span class="guess q" title="추측 — 브랜드 탭에서 ✔로 확정">(${esc(g)}?)</span>` : esc(b);
+}
+const tierIcon = a => a.source === "watch" ? "⭐ " : a.source === "brand" ? "📋 " : "";
+const blockedSet = () => new Set(SET.blocked_pages.map(x => x.toLowerCase()));
+function visibleAds() { const b = blockedSet(); return D.ads.filter(a => !b.has((a.page_name || "").toLowerCase())); }
+function mtype(a) {
+  if ((a.display_format || "").toUpperCase().includes("CAROUSEL") || (a.media_count || 0) > 1) return "carousel";
+  return a.media_type === "video" ? "video" : "image";
+}
+const isWin = a => a.run_days >= D.winning_days;
+const startOf = a => a.start_date || a.first_seen;
+const pair = a => a.partner ? `${a.page_name} × ${a.partner}` : "";
+
 async function init() {
   TODAY = D.today || D.updated;
   $("#upd").textContent = "마지막 수사: " + D.updated;
@@ -156,57 +214,69 @@ async function init() {
     <div class="stat" data-q="off"><b>${s.ended_week}</b><span>🪦 최근 7일 종료</span></div>
     <div class="stat" data-q=""><b>${s.total}</b><span>📁 누적 수집 · 브랜드 ${s.brands ?? "-"}개</span></div>`;
   document.querySelectorAll(".stat").forEach(el => el.onclick = () => {
-    const q = el.dataset.q;
+    const q = el.dataset.q; resetFilters();
     $("#fStatus").value = q === "win" ? "on" : q; $("#fDays").value = q === "win" ? D.winning_days : 0;
-    setView("ads");
+    AIQ = null; $("#qinfo").innerHTML = ""; setView("ads");
   });
-  [...new Set(D.ads.map(a => a.brand))].sort().forEach(b => $("#brandList").insertAdjacentHTML("beforeend", `<option value="${esc(b)}">`));
+  CATS.forEach(c => $("#fCat").insertAdjacentHTML("beforeend", `<option>${c}</option>`));
+  [...new Set(D.ads.map(a => a.channel).filter(Boolean))].sort().forEach(c => $("#fCh").insertAdjacentHTML("beforeend", `<option>${esc(c)}</option>`));
+  refreshBrandList();
   document.querySelectorAll("#filters select, #filters input").forEach(el => el.oninput = () => { LIMIT = 120; render(); });
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => setView(t.dataset.v));
   $("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
   document.onkeydown = e => { if (e.key === "Escape") closeModal(); };
+  $("#searchForm").onsubmit = e => { e.preventDefault(); aiSearch($("#q").value); };
   render();
 }
-
+function refreshBrandList() {
+  $("#brandList").innerHTML = [...new Set(visibleAds().map(brandOf))].sort().map(b => `<option value="${esc(b)}">`).join("");
+}
+function resetFilters() {
+  ["#fBrand", "#fText"].forEach(k => $(k).value = "");
+  ["#fSource", "#fStatus", "#fGrade", "#fType", "#fCat", "#fCh"].forEach(k => $(k).value = "");
+  $("#fDays").value = 0; $("#fPartner").checked = false; $("#fRisk").checked = false;
+}
 function setView(v) {
   VIEW = v;
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.v === v));
-  render();
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.v === v || (v === "brandpage" && t.dataset.v === "brand")));
+  render(); window.scrollTo(0, 0);
 }
 
+// ---------- 전체 소재 ----------
+function searchText(a) {
+  const an = a.analysis || {};
+  return [a.body, a.title, a.page_name, a.partner, brandOf(a), ...(a.keywords || []), ...(a.kw || []), ...(a.cats || []),
+          ...(an.appeal_points || []), an.format, an.hook_3s, an.structure].join(" ").toLowerCase();
+}
 function filtered() {
-  const b = $("#fBrand").value.trim(), src = $("#fSource").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
-        g = $("#fGrade").value, txt = $("#fText").value.trim().toLowerCase(),
-        p = $("#fPartner").checked, risk = $("#fRisk").checked;
-  const ty = $("#fType").value;
+  const b = $("#fBrand").value.trim().toLowerCase(), src = $("#fSource").value, st = $("#fStatus").value, days = +$("#fDays").value || 0,
+        g = $("#fGrade").value, txt = $("#fText").value.trim().toLowerCase(), p = $("#fPartner").checked, risk = $("#fRisk").checked,
+        ty = $("#fType").value, cat = $("#fCat").value, ch = $("#fCh").value;
   let r = visibleAds().filter(a =>
-    (!ty || mtype(a) === ty) &&
-    (!b || a.brand === b || a.brand.toLowerCase().includes(b.toLowerCase())) &&
+    (!ty || mtype(a) === ty) && (!cat || (a.cats || []).includes(cat)) && (!ch || a.channel === ch) &&
+    (!b || brandOf(a).toLowerCase() === b || brandOf(a).toLowerCase().includes(b) || (a.page_name || "").toLowerCase().includes(b)) &&
     (!src || a.source === src) &&
-    (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === TODAY)) &&
+    (!st || (st === "on" && a.is_active) || (st === "off" && !a.is_active) || (st === "new" && a.first_seen === TODAY)
+         || (st === "winend" && !a.is_active && isWin(a))) &&
     a.run_days >= days &&
     (!g || (g === "none" ? !a.analysis : a.analysis?.grade === g)) &&
     (!p || a.partner) &&
     (!risk || !a.analysis || a.analysis.yakkiho_risk === "없음") &&
-    (!txt || [a.body, a.title, a.partner, ...(a.keywords || []), ...(a.analysis?.appeal_points || []), a.analysis?.format, a.analysis?.hook_3s]
-              .join(" ").toLowerCase().includes(txt)));
+    (!txt || searchText(a).includes(txt)));
+  if (AIQ) {     // AI 검색 결과: 점수순
+    r = r.map(a => [a, aiScore(a)]).filter(x => x[1] > 0).sort((x, y) => y[1] - x[1] || y[0].run_days - x[0].run_days).map(x => x[0]);
+    return r;
+  }
   const key = $("#fSort").value;
   r.sort((x, y) => key === "new" ? (y.first_seen || "").localeCompare(x.first_seen || "") : y.run_days - x.run_days);
   return r;
 }
-
-const qa = x => "decodeURIComponent(&quot;" + encodeURIComponent(x ?? "").replace(/'/g, "%27") + "&quot;)";
-const blockedSet = () => new Set(SET.blocked_pages.map(x => x.toLowerCase()));
-function visibleAds() { const b = blockedSet(); return D.ads.filter(a => !b.has((a.page_name || "").toLowerCase())); }
-function mtype(a) {
-  if ((a.display_format || "").toUpperCase().includes("CAROUSEL") || (a.media_count || 0) > 1) return "carousel";
-  return a.media_type === "video" ? "video" : "image";
-}
-
 function render() {
   $("#filters").style.display = VIEW === "ads" ? "flex" : "none";
   if (VIEW === "partner") return renderPartner();
   if (VIEW === "brand") return renderBrand();
+  if (VIEW === "brandpage") return renderBrandPage();
+  if (VIEW === "trend") return renderTrend();
   if (VIEW === "settings") return renderSettings();
   const list = filtered();
   $("#count").textContent = list.length + "개";
@@ -215,40 +285,68 @@ function render() {
   $("#view").innerHTML = '<div class="grid">' + shown.map(card).join("") + "</div>" +
     (list.length > LIMIT ? `<p class="empty" style="text-align:center"><button class="tab" id="more">더 보기 (${list.length - LIMIT}개 남음)</button></p>` : "");
   if ($("#more")) $("#more").onclick = () => { LIMIT += 120; render(); };
-  document.querySelectorAll(".ad").forEach(el => el.onclick = () => openModal(el.dataset.id));
+  bindCards();
 }
-
+function bindCards() { document.querySelectorAll(".ad, .mini > div").forEach(el => el.onclick = () => openModal(el.dataset.id)); }
 function card(a) {
-  const win = a.is_active && a.run_days >= D.winning_days, an = a.analysis;
-  const tags = (an?.appeal_points || []).slice(0, 3).map(t => `<span class="tag">${esc(t)}</span>`).join("")
+  const win = a.is_active && isWin(a), an = a.analysis;
+  const tags = (an?.appeal_points || []).slice(0, 2).map(t => `<span class="tag">${esc(t)}</span>`).join("")
+    + (a.cats || []).slice(0, 1).map(c => `<span class="tag cat">${esc(c)}</span>`).join("")
+    + (a.channel ? `<span class="tag ch">${esc(a.channel)}</span>` : "")
     + (a.partner ? `<span class="tag p">🤝 ${esc(a.partner)}</span>` : "")
-    + (an && an.yakkiho_risk && an.yakkiho_risk !== "없음" ? `<span class="tag r">⚠ 약기법 ${esc(an.yakkiho_risk)}</span>` : "");
+    + (an && an.yakkiho_risk && an.yakkiho_risk !== "없음" ? `<span class="tag r">⚠ 약기법</span>` : "");
   return `<div class="ad" data-id="${a.id}">
     <div class="thumb" style="background-image:url('${a.thumb ? "thumbs/" + a.thumb : ""}')">
       <span class="badge ${win ? "win" : ""}">${win ? "🏆 " : ""}${a.run_days}일${a.is_active ? "" : " · 종료"}</span>
       ${an?.grade ? `<span class="grade g${an.grade}">${an.grade}</span>` : ""}
-      ${a.media_type === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : ""}
+      ${mtype(a) === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : mtype(a) === "carousel" ? `<span class="vid">🗂 ${a.media_count || ""}</span>` : ""}
     </div>
-    <div class="meta"><div class="br">${a.source === "watch" ? "⭐ " : ""}${esc(a.brand)}<button class="blk" title="관련 없는 광고주 차단" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button></div>
-      <div class="dt">${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
+    <div class="meta"><div class="br">${tierIcon(a)}${brandLabel(a)}<button class="blk" title="관련 없는 광고주 차단" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button></div>
+      <div class="dt">${esc(startOf(a))} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
       <div class="tags">${tags}</div></div></div>`;
 }
 
+// ---------- 유사 광고 ----------
+const PC = [0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4];
+function ham(x, y) { let d = 0; for (let i = 0; i < 16; i++) d += PC[parseInt(x[i], 16) ^ parseInt(y[i], 16)]; return d; }
+function jac(a, b) { if (!a?.length || !b?.length) return 0; const s = new Set(a); let n = 0; b.forEach(x => s.has(x) && n++); return n / (a.length + b.length - n); }
+function similar(a, n = 8) {
+  const out = [];
+  for (const o of visibleAds()) {
+    if (o.id === a.id) continue;
+    let img = 0, txt = 0;
+    if (a.dhash && o.dhash) { const h = ham(a.dhash, o.dhash); if (h <= 12) img = 1 - h / 64; }
+    txt = jac(a.kw, o.kw) + 0.3 * jac(a.analysis?.appeal_points, o.analysis?.appeal_points);
+    const sc = Math.max(img, txt);
+    if (sc >= 0.3) out.push([o, sc, img >= txt ? "🖼 이미지" : "📝 카피"]);
+  }
+  return out.sort((x, y) => y[1] - x[1]).slice(0, n);
+}
+const mini = (o, label) => `<div data-id="${o.id}"><div class="t" style="background-image:url('${o.thumb ? "thumbs/" + o.thumb : ""}')">${label ? `<span>${label}</span>` : ""}</div>${esc(brandOf(o))} · ${o.run_days}일</div>`;
+
+// ---------- 상세 ----------
 function openModal(id) {
-  const a = D.ads.find(x => x.id === id), an = a.analysis, files = a.files || [];
+  const a = D.ads.find(x => x.id === id); if (!a) return;
+  const an = a.analysis, files = a.files || [];
   const frame = f => `https://drive.google.com/file/d/${f.id}/preview`;
   const player = files.length
     ? `<iframe id="pf" src="${frame(files[0])}" allow="autoplay"></iframe>` +
       (files.length > 1 ? `<div class="sw">${files.map((f, i) => `<button onclick="document.getElementById('pf').src='${frame(f)}'">${i + 1}번</button>`).join("")}</div>` : "")
-    : `<div style="color:#aaa;padding:20px">드라이브 파일 없음${a.thumb ? `<br><img src="thumbs/${a.thumb}" style="max-width:100%;margin-top:10px">` : ""}</div>`;
+    : `<div style="color:#aaa;padding:20px">원본은 ${a.source === "watch" ? "다음 수사 때" : "14일 이상 게재되면"} 저장돼요${a.thumb ? `<br><img src="thumbs/${a.thumb}" style="max-width:100%;margin-top:10px">` : ""}</div>`;
   const row = (t, v) => v ? `<div class="row"><b>${t}</b>${v}</div>` : "";
+  const sims = similar(a);
+  const g = guessOf(a.page_name);
   $("#box").innerHTML = `
     <div class="player">${player}</div>
     <div class="info"><button class="close" onclick="closeModal()">×</button>
-      <button class="btn sub" style="float:right;margin:2px 8px 0 0;padding:5px 10px;font-size:12px" onclick="blockPage(D.ads.find(x=>x.id==='${a.id}').page_name)">🚫 이 광고주 차단</button>
-      <h2>${esc(a.brand)} ${an?.grade ? `<span class="grade g${an.grade}" style="position:static;display:inline-grid;vertical-align:middle">${an.grade}</span>` : ""}</h2>
-      <div style="font-size:12px;color:#6f6a62">${esc(a.page_name)} · ${a.run_days}일 게재 (${esc(a.start_date || a.first_seen)} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}) · <a href="${a.ad_url}" target="_blank">광고 라이브러리 ↗</a></div>
-      ${a.partner ? row("🤝 협력 크리에이터", esc(a.partner)) : ""}
+      <button class="btn sub" style="float:right;margin:2px 8px 0 0;padding:5px 10px;font-size:12px" onclick="blockPage(${qa(a.page_name)})">🚫 이 광고주 차단</button>
+      <h2>${tierIcon(a)}<a href="#" onclick="openBrand(${qa(brandOf(a))});return false" style="color:inherit">${brandLabel(a)}</a>
+        ${an?.grade ? `<span class="grade g${an.grade}" style="position:static;display:inline-grid;vertical-align:middle">${an.grade}</span>` : ""}</h2>
+      <div class="small">${a.source === "sweep" ? `<a href="#" onclick="renameAlias(${qa(a.page_name)});return false">✏️ 실제 브랜드 지정</a>${g ? ` · <a href="#" onclick="confirmGuess(${qa(a.page_name)});return false">✔ '${esc(g)}' 맞아요</a>` : ""} · ` : ""}
+        ${a.run_days}일 게재 (${esc(startOf(a))} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}) · <a href="${a.ad_url}" target="_blank">광고 라이브러리 ↗</a></div>
+      ${a.partner ? row("🤝 파트너십", `${esc(a.page_name)} × ${esc(a.partner)}`) : ""}
+      ${a.link_url ? row("🔗 랜딩페이지 " + (a.channel ? `<span class="tag ch">${esc(a.channel)}</span>` : ""), `<a href="${esc(a.link_url)}" target="_blank" style="word-break:break-all">${esc(a.link_url.length > 90 ? a.link_url.slice(0, 90) + "…" : a.link_url)}</a>`) : ""}
+      ${(a.cats || []).length ? row("카테고리", a.cats.map(c => `<span class="tag cat">${esc(c)}</span>`).join(" ")) : ""}
       ${an ? `
         ${row("포맷", esc(an.format))}
         ${row("첫 3초 훅", esc(an.hook_3s))}
@@ -258,7 +356,7 @@ function openModal(id) {
         ${row("오래 살아남은 이유(추정)", esc(an.why_winning))}
         <div class="row idea"><b>💡 셀로라바이 적용안</b>${esc(an.celoraby_idea)}</div>
         ${row("⚖️ 약기법 리스크: " + esc(an.yakkiho_risk), esc(an.yakkiho_notes))}`
-      : `<div class="row" style="color:#6f6a62">아직 AI 분석 전이에요 (일정 기간 이상 게재된 소재만 분석).</div>`}
+      : `<div class="row small">아직 AI 분석 전이에요 (14일 이상 게재된 소재부터, 오래된 순으로 분석).</div>`}
       ${a.analysis_claude ? `<div class="claude"><h3>🧠 Claude 심층 분석 · 등급 ${esc(a.analysis_claude.grade)}</h3>
         ${row("첫 3초 훅", esc(a.analysis_claude.hook_3s))}
         ${row("전개 구조", esc(a.analysis_claude.structure))}
@@ -266,54 +364,185 @@ function openModal(id) {
         <div class="row idea"><b>💡 셀로라바이 적용안 (Claude)</b>${esc(a.analysis_claude.celoraby_idea)}</div>
         ${row("⚖️ 약기법: " + esc(a.analysis_claude.yakkiho_risk), esc(a.analysis_claude.yakkiho_notes))}</div>` : ""}
       ${row("광고 문구", `<pre>${esc(a.body)}</pre>`)}
+      ${sims.length ? row(`👀 비슷한 광고 ${sims.length}개`, `<div class="mini">${sims.map(([o, , l]) => mini(o, l)).join("")}</div>`) : ""}
     </div>`;
   $("#modal").classList.add("on");
+  $("#box").scrollTop = 0;
+  document.querySelectorAll("#box .mini > div").forEach(el => el.onclick = () => openModal(el.dataset.id));
 }
 function closeModal() { $("#modal").classList.remove("on"); $("#box").innerHTML = ""; }
 
+// ---------- AI 검색 ----------
+async function aiSearch(q) {
+  q = (q || "").trim();
+  if (!q) { AIQ = null; $("#qinfo").innerHTML = ""; return render(); }
+  $("#qinfo").innerHTML = "🔎 찾는 중...";
+  let plan = null;
+  const key = store.get("gmkey");
+  if (key) {
+    try {
+      const prompt = `너는 일본 화장품 광고 검색 도우미다. 사용자의 검색 요청을 일본 메타 광고 문구에서 찾을 검색어로 바꿔라.
+요청: "${q}"
+JSON만 출력: {"keywords": ["일본어 광고 문구에 실제로 나올 법한 단어 8~15개 (동의어·표기 변형 포함)", "한국어 소구점 태그 3~5개"],
+"type": "video|image|carousel|빈문자열", "category": "${CATS.join("|")}|빈문자열", "min_days": 숫자(위닝·오래된 광고 요청이면 30, 아니면 0)}`;
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }) });
+      const j = await r.json();
+      plan = JSON.parse(j.candidates[0].content.parts.map(p => p.text).join(""));
+    } catch (e) { console.warn(e); }
+  }
+  if (!plan) plan = { keywords: q.split(/[\s,、・]+/).filter(Boolean), type: "", category: "", min_days: 0 };
+  AIQ = { q, words: [...new Set((plan.keywords || []).map(w => String(w).toLowerCase()).filter(w => w.length > 0))] };
+  resetFilters();
+  if (["video", "image", "carousel"].includes(plan.type)) $("#fType").value = plan.type;
+  if (CATS.includes(plan.category)) $("#fCat").value = plan.category;
+  if (plan.min_days) $("#fDays").value = plan.min_days;
+  $("#qinfo").innerHTML = `${key ? "🤖 AI 검색어" : "검색어"}: ${AIQ.words.map(w => `<span class="tag">${esc(w)}</span>`).join(" ")}
+    ${plan.type ? ` · 유형 ${esc(plan.type)}` : ""}${plan.category ? ` · ${esc(plan.category)}` : ""}${plan.min_days ? ` · ${plan.min_days}일+` : ""}
+    · <a href="#" onclick="AIQ=null;$('#q').value='';$('#qinfo').innerHTML='';resetFilters();render();return false">✕ 검색 해제</a>
+    ${key ? "" : ` · <span class="small">AI 검색을 쓰려면 ⚙️ 수사 설정에서 Gemini 키 등록</span>`}`;
+  setView("ads");
+}
+function aiScore(a) {
+  const t = searchText(a); let s = 0;
+  for (const w of AIQ.words) if (t.includes(w)) s += w.length >= 3 ? 2 : 1;
+  return s;
+}
+
+// ---------- 카피 트렌드 ----------
+function period(unit, off) {
+  const d = new Date(TODAY + "T00:00:00");
+  let s, e;
+  if (unit === "day") { s = new Date(d); s.setDate(d.getDate() - off); e = new Date(s); }
+  else if (unit === "week") { s = new Date(d); s.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * off); e = new Date(s); e.setDate(s.getDate() + 6); }
+  else if (unit === "month") { s = new Date(d.getFullYear(), d.getMonth() - off, 1); e = new Date(d.getFullYear(), d.getMonth() - off + 1, 0); }
+  else { s = new Date(d.getFullYear() - off, 0, 1); e = new Date(d.getFullYear() - off, 11, 31); }
+  const f = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+  return [f(s), f(e)];
+}
+function countKw(ads) { const c = {}; ads.forEach(a => new Set(a.kw || []).forEach(w => c[w] = (c[w] || 0) + 1)); return c; }
+function renderTrend() {
+  const { unit, off } = TREND;
+  const [s, e] = period(unit, off), [ps, pe] = period(unit, off + 1);
+  const all = visibleAds();
+  const cur = all.filter(a => startOf(a) >= s && startOf(a) <= e), prev = all.filter(a => startOf(a) >= ps && startOf(a) <= pe);
+  const c = countKw(cur), p = countKw(prev);
+  const top = Object.entries(c).sort((x, y) => y[1] - x[1]).slice(0, 70);
+  const mx = top[0]?.[1] || 1;
+  const rising = Object.entries(c).filter(([w, n]) => n >= 2).map(([w, n]) => [w, n, p[w] || 0, (n + 1) / ((p[w] || 0) + 1)])
+    .sort((x, y) => y[3] - x[3] || y[1] - x[1]).slice(0, 15);
+  const cats = {}; cur.forEach(a => (a.cats || []).forEach(k => cats[k] = (cats[k] || 0) + 1));
+  const colors = ["#3b2f8f", "#1f8a4c", "#b7791f", "#b23a3a", "#2b6cb0", "#6b46c1"];
+  const shuffled = top.slice().sort((x, y) => (x[0].charCodeAt(0) * 7 + x[0].length) % 11 - (y[0].charCodeAt(0) * 7 + y[0].length) % 11);
+  const ub = (u, l) => `<button class="tab ${unit === u ? "on" : ""}" onclick="TREND={unit:'${u}',off:0};render()">${l}</button>`;
+  $("#view").innerHTML = `<div class="bp">
+    <div class="per">${ub("day", "일간")}${ub("week", "주간")}${ub("month", "월간")}${ub("year", "연간")}
+      <button class="tab" onclick="TREND.off++;render()">◀</button><b>${s}${s !== e ? " ~ " + e : ""}</b>
+      <button class="tab" ${off === 0 ? "disabled" : ""} onclick="TREND.off=Math.max(0,TREND.off-1);render()">▶</button>
+      <span class="small">이 기간에 시작된 광고 ${cur.length}개 (이전 기간 ${prev.length}개)</span></div>
+    ${cur.length ? `<div class="cloud">${shuffled.map(([w, n], i) => `<span onclick="kwJump(${qa(w)})" title="${n}개 광고" style="font-size:${12 + Math.round(30 * Math.sqrt(n / mx))}px;color:${colors[i % colors.length]};font-weight:${n / mx > .4 ? 800 : 500}">${esc(w)}</span>`).join(" ")}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px">
+      <div class="panel"><h3>🔥 많이 쓴 키워드</h3><table class="tbl-sm" style="width:100%;margin:0"><tr><th>#</th><th>키워드</th><th>광고 수</th><th>이전</th></tr>
+        ${top.slice(0, 20).map(([w, n], i) => `<tr class="click" onclick="kwJump(${qa(w)})"><td>${i + 1}</td><td>${esc(w)}</td><td>${n}</td><td>${p[w] || 0} ${n > (p[w] || 0) ? '<span class="up">▲</span>' : n < (p[w] || 0) ? '<span class="dn">▼</span>' : ""}</td></tr>`).join("")}</table></div>
+      <div class="panel"><h3>🚀 급상승</h3><table class="tbl-sm" style="width:100%;margin:0"><tr><th>키워드</th><th>이번</th><th>이전</th></tr>
+        ${rising.map(([w, n, q]) => `<tr class="click" onclick="kwJump(${qa(w)})"><td>${esc(w)} ${q === 0 ? '<span class="tag r">NEW</span>' : ""}</td><td>${n}</td><td>${q}</td></tr>`).join("") || "<tr><td colspan=3 class=small>비교할 데이터가 아직 적어요</td></tr>"}</table>
+        <h3 style="margin-top:14px">🧴 카테고리</h3>${Object.entries(cats).sort((x, y) => y[1] - x[1]).map(([k, n]) => `<span class="tag cat" style="margin:2px">${esc(k)} ${n}</span>`).join("") || '<span class="small">-</span>'}</div>
+    </div>` : `<p class="empty">이 기간에 시작된 광고가 없어요. ◀ 로 이전 기간을 보세요.</p>`}
+  </div>`;
+}
+function kwJump(w) { AIQ = null; $("#qinfo").innerHTML = ""; resetFilters(); $("#fText").value = w; setView("ads"); }
+
+// ---------- 협력 광고 ----------
 function renderPartner() {
   const m = {};
-  D.ads.filter(a => a.partner).forEach(a => {
-    const k = a.brand + "|" + a.partner;
-    (m[k] ??= { brand: a.brand, partner: a.partner, ads: [] }).ads.push(a);
+  visibleAds().filter(a => a.partner).forEach(a => {
+    const k = brandOf(a) + "|" + a.partner;
+    (m[k] ??= { brand: brandOf(a), partner: a.partner, ads: [] }).ads.push(a);
   });
   const rows = Object.values(m).map(g => ({ ...g,
     n: g.ads.length, on: g.ads.filter(a => a.is_active).length,
     avg: Math.round(g.ads.reduce((s, a) => s + a.run_days, 0) / g.ads.length),
     max: Math.max(...g.ads.map(a => a.run_days)),
-    from: g.ads.map(a => a.start_date || a.first_seen).sort()[0],
+    from: g.ads.map(startOf).sort()[0],
     to: g.ads.some(a => a.is_active) ? "게재 중" : g.ads.map(a => a.end_date || "").sort().pop() }))
     .sort((a, b) => b.avg - a.avg);
   if (!rows.length) return $("#view").innerHTML = '<p class="empty">아직 협력 광고가 없어요.</p>';
-  $("#view").innerHTML = `<table><tr><th>크리에이터</th><th>브랜드</th><th>협업 소재</th><th>게재 중</th><th>평균 게재일</th><th>최장</th><th>기간</th></tr>
+  $("#view").innerHTML = `<table><tr><th>파트너 계정</th><th>브랜드</th><th>협업 소재</th><th>게재 중</th><th>평균 게재일</th><th>최장</th><th>기간</th></tr>
     ${rows.map(r => `<tr class="click" data-b="${esc(r.brand)}" data-p="${esc(r.partner)}"><td><b>${esc(r.partner)}</b></td><td>${esc(r.brand)}</td><td>${r.n}</td><td>${r.on}</td><td>${r.avg}일</td><td>${r.max}일</td><td>${esc(r.from)} ~ ${esc(r.to)}</td></tr>`).join("")}</table>`;
   document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
-    $("#fBrand").value = tr.dataset.b; $("#fText").value = tr.dataset.p; $("#fPartner").checked = true;
-    $("#fStatus").value = ""; $("#fDays").value = 0; setView("ads");
+    resetFilters(); $("#fBrand").value = tr.dataset.b; $("#fText").value = tr.dataset.p; $("#fPartner").checked = true; setView("ads");
   });
 }
 
-function renderBrand() {
+// ---------- 브랜드 목록 / 브랜드 페이지 ----------
+function brandGroups() {
   const m = {};
-  visibleAds().forEach(a => (m[a.brand] ??= []).push(a));
-  const watchNames = new Set(SET.watch.map(w => w.name));
+  visibleAds().forEach(a => (m[brandOf(a)] ??= []).push(a));
+  return m;
+}
+function tierOfName(b, ads) {
+  if (SET.watch.some(w => w.name === b) || ads?.some(a => a.source === "watch")) return "watch";
+  if (SET.brands.some(w => w.name === b) || ads?.some(a => a.source === "brand")) return "brand";
+  return "sweep";
+}
+function renderBrand() {
+  const m = brandGroups();
   const rows = Object.entries(m).map(([b, ads]) => {
     const on = ads.filter(a => a.is_active), grades = { A: 0, B: 0, C: 0 };
     ads.forEach(a => a.analysis?.grade && grades[a.analysis.grade]++);
-    const tagCount = {};
-    ads.forEach(a => (a.analysis?.appeal_points || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
-    const top = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([t, n]) => `${t}(${n})`).join(", ");
-    return { b, watch: (watchNames.has(b) || ads.some(a => a.source === "watch")) ? 1 : 0, total: ads.length, on: on.length, win: on.filter(a => a.run_days >= D.winning_days).length,
+    const pages = [...new Set(ads.map(a => a.page_name))];
+    const g = pages.length === 1 ? guessOf(pages[0]) : null;
+    return { b, tier: tierOfName(b, ads), pages, g, total: ads.length, on: on.length, win: on.filter(isWin).length,
       nw: ads.filter(a => a.first_seen === TODAY).length, partner: ads.filter(a => a.partner).length,
-      vid: ads.filter(a => a.media_type === "video").length, grades, top };
-  }).sort((a, b) => (b.watch - a.watch) || (b.win - a.win) || (b.on - a.on)).slice(0, 150);
-  const log = D.log?.brands || {};
-  $("#view").innerHTML = `<p style="margin:10px 24px 0;font-size:12px;color:#6f6a62">⭐ 집중 감시 → 위닝 소재 많은 순 (상위 150개) · ☆ 누르면 집중 감시에 추가</p><table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th>주력 소구점</th><th>오늘 수집</th></tr>
-    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${r.watch ? "⭐ " : `<button class="blk" style="float:none;opacity:.6" title="집중 감시에 추가" onclick="event.stopPropagation();addWatch(${qa(r.b)})">☆</button> `}${esc(r.b)}</b></td><td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td>
-      <td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td><td>${esc(r.top) || "-"}</td><td>${log[r.b] ? (log[r.b].found ? "✅ " + log[r.b].found : "⚠ 0건") : "🔎"}</td></tr>`).join("")}</table>`;
-  document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => {
-    $("#fBrand").value = tr.dataset.b; $("#fSource").value = ""; $("#fText").value = ""; $("#fPartner").checked = false; setView("ads");
+      vid: ads.filter(a => mtype(a) === "video").length, grades };
+  }).sort((a, b) => ({ watch: 2, brand: 1, sweep: 0 }[b.tier] - { watch: 2, brand: 1, sweep: 0 }[a.tier]) || (b.win - a.win) || (b.on - a.on)).slice(0, 200);
+  $("#view").innerHTML = `<p class="small" style="margin:10px 24px 0">브랜드를 누르면 브랜드 페이지가 열려요 · ☆ 집중 감시 · 📋 일반 수집 · ✏️ 실제 브랜드 지정 (상위 200개)</p>
+    <table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th></th></tr>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${{ watch: "⭐ ", brand: "📋 ", sweep: "" }[r.tier]}${esc(r.b)}</b>
+        ${r.g ? ` <span class="guess q">(${esc(r.g)}?)</span>` : ""}${r.pages.length > 1 || (r.pages[0] && r.pages[0] !== r.b) ? `<div class="small">${r.pages.map(esc).join(", ")}</div>` : ""}</td>
+      <td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td><td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td>
+      <td class="act" onclick="event.stopPropagation()">${r.tier === "sweep" ? `<button title="집중 감시" onclick="addWatch(${qa(r.g || r.b)},'','${""}',${qa(r.pages.join(","))})">☆</button><button title="일반 수집" onclick="addBrand(${qa(r.g || r.b)},${qa(r.pages.join(","))})">📋</button>` : ""}
+        ${r.pages.length === 1 && r.tier === "sweep" ? `<button title="실제 브랜드 지정" onclick="renameAlias(${qa(r.pages[0])})">✏️</button>${r.g ? `<button title="추측 확정" onclick="confirmGuess(${qa(r.pages[0])})">✔</button>` : ""}` : ""}</td></tr>`).join("")}</table>`;
+  document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => openBrand(tr.dataset.b));
+}
+function openBrand(b) { BRAND = b; closeModal(); setView("brandpage"); }
+function renderBrandPage() {
+  const ads = (brandGroups()[BRAND] || []).sort((x, y) => (startOf(y) || "").localeCompare(startOf(x) || ""));
+  if (!ads.length) return $("#view").innerHTML = '<p class="empty">이 브랜드의 소재가 없어요.</p>';
+  const tier = tierOfName(BRAND, ads), on = ads.filter(a => a.is_active);
+  const kw = Object.entries(countKw(ads)).sort((x, y) => y[1] - x[1]).slice(0, 30);
+  const appeal = {}; ads.forEach(a => (a.analysis?.appeal_points || []).forEach(t => appeal[t] = (appeal[t] || 0) + 1));
+  const pages = [...new Set(ads.map(a => a.page_name))];
+  const since = (() => { const d = new Date(TODAY + "T00:00:00"); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10); })();
+  const ev = {};
+  ads.forEach(a => {
+    if ((a.first_seen || "") >= since) (ev[a.first_seen] ??= { n: [], e: [] }).n.push(a);
+    if (!a.is_active && (a.end_date || "") >= since) (ev[a.end_date] ??= { n: [], e: [] }).e.push(a);
   });
+  const days = Object.keys(ev).sort().reverse();
+  const partners = {}; ads.filter(a => a.partner).forEach(a => partners[a.partner] = (partners[a.partner] || 0) + 1);
+  const chs = {}; ads.forEach(a => a.channel && (chs[a.channel] = (chs[a.channel] || 0) + 1));
+  $("#view").innerHTML = `<div class="bp">
+    <div class="top"><button class="tab" onclick="setView('brand')">← 브랜드 목록</button>
+      <h2>${{ watch: "⭐ ", brand: "📋 ", sweep: "" }[tier]}${esc(BRAND)}</h2>
+      ${tier === "sweep" ? `<button class="btn sub" onclick="addWatch(${qa(BRAND)},'','',${qa(pages.join(","))})">☆ 집중 감시</button><button class="btn sub" onclick="addBrand(${qa(BRAND)},${qa(pages.join(","))})">📋 일반 수집</button>` : ""}
+      ${pages.length === 1 && tier === "sweep" ? `<button class="btn sub" onclick="renameAlias(${qa(pages[0])})">✏️ 실제 브랜드 지정</button>` : ""}
+      <span class="small">계정: ${pages.map(esc).join(", ")}</span></div>
+    <div class="kpis"><div><b>${on.length}</b>게재 중</div><div><b>${on.filter(isWin).length}</b>🏆 위닝</div><div><b>${ads.length}</b>누적</div>
+      <div><b>${ads.filter(a => mtype(a) === "video").length}</b>영상</div><div><b>${ads.filter(a => mtype(a) === "carousel").length}</b>카드뉴스</div>
+      <div><b>${Object.keys(partners).length}</b>협력 계정</div>${Object.entries(chs).map(([c, n]) => `<div><b>${n}</b>${esc(c)}</div>`).join("")}</div>
+    <div class="panel"><h3>💬 자주 쓰는 카피 키워드</h3><div class="kwc">${kw.map(([w, n]) => `<span onclick="resetFilters();$('#fBrand').value=${qa(BRAND)};$('#fText').value=${qa(w)};setView('ads')">${esc(w)}<i>${n}</i></span>`).join("") || '<span class="small">-</span>'}</div>
+      ${Object.keys(appeal).length ? `<h3 style="margin-top:12px">🎯 주력 소구점 (AI)</h3><div class="kwc">${Object.entries(appeal).sort((x, y) => y[1] - x[1]).slice(0, 12).map(([w, n]) => `<span>${esc(w)}<i>${n}</i></span>`).join("")}</div>` : ""}
+      ${Object.keys(partners).length ? `<h3 style="margin-top:12px">🤝 협력 계정</h3><div class="kwc">${Object.entries(partners).sort((x, y) => y[1] - x[1]).map(([w, n]) => `<span>${esc(w)}<i>${n}</i></span>`).join("")}</div>` : ""}</div>
+    <div class="panel"><h3>🏆 위닝 소재</h3><div class="mini">${on.filter(isWin).sort((x, y) => y.run_days - x.run_days).slice(0, 16).map(o => mini(o, o.run_days + "일")).join("") || '<span class="small">아직 없음</span>'}</div></div>
+    <div class="panel"><h3>🗓 최근 30일 타임라인</h3><div class="tl">${days.map(d => `<div><div class="d">${d}</div>
+      ${ev[d].n.length ? `<div class="small">🆕 새 광고 ${ev[d].n.length}개</div><div class="mini">${ev[d].n.slice(0, 12).map(o => mini(o, "NEW")).join("")}</div>` : ""}
+      ${ev[d].e.length ? `<div class="small">🪦 종료 ${ev[d].e.length}개</div><div class="mini">${ev[d].e.slice(0, 12).map(o => mini(o, o.run_days + "일")).join("")}</div>` : ""}</div>`).join("") || '<span class="small">최근 30일 변화 없음</span>'}</div></div>
+    <div class="panel"><h3>📁 전체 소재 (${ads.length})</h3><div class="mini">${ads.slice(0, 60).map(o => mini(o, o.is_active ? o.run_days + "일" : "종료")).join("")}</div>
+      ${ads.length > 60 ? `<p><a href="#" onclick="resetFilters();$('#fBrand').value=${qa(BRAND)};setView('ads');return false">전체 보기 →</a></p>` : ""}</div>
+  </div>`;
+  bindCards();
 }
 
 // ---------- ⚙️ 수사 설정 (GitHub 연동) ----------
@@ -329,6 +558,7 @@ async function gh(path, opts = {}) {
   if (!r.ok && r.status !== 204) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0, 120)}`);
   return r.status === 204 ? null : r.json();
 }
+function fillSet() { for (const k of ["watch", "brands", "keywords", "blocked_pages"]) SET[k] ??= []; SET.aliases ??= {}; }
 async function loadSettings() {
   try {
     if (token()) {
@@ -338,7 +568,7 @@ async function loadSettings() {
       SET = await (await fetch("settings.json?" + Date.now())).json();
     }
   } catch (e) { console.warn(e); }
-  SET.watch ??= []; SET.keywords ??= []; SET.blocked_pages ??= [];
+  fillSet();
 }
 async function saveSettings(msg) {
   if (!token()) { alert("⚙️ 수사 설정 탭에서 GitHub 키를 먼저 등록해주세요."); setView("settings"); return false; }
@@ -346,10 +576,11 @@ async function saveSettings(msg) {
     try {
       const r = await gh("/contents/docs/settings.json", { method: "PUT", body: JSON.stringify({
         message: "⚙️ " + msg, content: u8b64(JSON.stringify(SET, null, 1)), sha: SHA, branch: "main" }) });
-      SHA = r.content.sha; return true;
+      SHA = r.content.sha; refreshBrandList(); return true;
     } catch (e) {
-      if (i === 0 && /409|422/.test(e.message)) { const cur = SET; await loadSettings();   // 다른 곳에서 바뀌었으면 합쳐서 재시도
-        for (const k of ["watch", "keywords", "blocked_pages"]) SET[k] = mergeList(SET[k], cur[k]); continue; }
+      if (i === 0 && /409|422/.test(e.message)) { const cur = SET; await loadSettings();
+        for (const k of ["watch", "brands", "keywords", "blocked_pages"]) SET[k] = mergeList(SET[k], cur[k]);
+        SET.aliases = { ...SET.aliases, ...cur.aliases }; continue; }
       alert("저장 실패: " + e.message); return false;
     }
   }
@@ -370,19 +601,49 @@ async function unblock(name) {
   SET.blocked_pages = SET.blocked_pages.filter(x => x !== name);
   if (await saveSettings(`차단 해제: ${name}`)) render();
 }
-async function addWatch(name, pageRef = "", aliases = "") {
+function mkEntry(name, pageRef = "", aliases = "", pages = "") {
+  const id = (pageRef.match(/view_all_page_id=(\d+)/) || pageRef.match(/[?&]id=(\d+)/) || pageRef.match(/^\s*(\d{6,})\s*$/) || [])[1] || "";
+  const names = [name, ...aliases.split(","), ...pages.split(",")].map(x => x.trim().toLowerCase()).filter(Boolean);
+  return { name, page_id: id, keyword: name, page_names: [...new Set(names)] };
+}
+async function addWatch(name, pageRef = "", aliases = "", pages = "") {
   name = (name || "").trim(); if (!name) return;
   if (SET.watch.some(w => w.name === name)) return alert("이미 집중 감시 중이에요.");
-  const id = (pageRef.match(/view_all_page_id=(\d+)/) || pageRef.match(/[?&]id=(\d+)/) || pageRef.match(/^\s*(\d{6,})\s*$/) || [])[1] || "";
-  const names = [name, ...aliases.split(",")].map(x => x.trim().toLowerCase()).filter(Boolean);
-  SET.watch.push({ name, page_id: id, keyword: name, page_names: [...new Set(names)] });
-  if (await saveSettings(`집중 감시 추가: ${name}`)) { alert(`⭐ '${name}' 집중 감시에 추가했어요.\n'수사 시작'을 누르면 바로 수집해요.`); render(); }
+  SET.watch.push(mkEntry(name, pageRef, aliases, pages));
+  SET.brands = SET.brands.filter(w => w.name !== name);
+  if (await saveSettings(`집중 감시 추가: ${name}`)) { alert(`⭐ '${name}' 집중 감시에 추가했어요.\n'⚡ 빠른 수사'를 누르면 바로 수집해요.`); render(); }
   else SET.watch.pop();
 }
 async function removeWatch(name) {
   if (!confirm(`'${name}' 집중 감시를 해제할까요? (지금까지 모은 소재는 남아요)`)) return;
   SET.watch = SET.watch.filter(w => w.name !== name);
   if (await saveSettings(`집중 감시 해제: ${name}`)) render();
+}
+async function addBrand(name, pages = "", pageRef = "", aliases = "") {
+  name = (name || "").trim(); if (!name) return;
+  if (SET.brands.some(w => w.name === name) || SET.watch.some(w => w.name === name)) return alert("이미 수집 중인 브랜드예요.");
+  SET.brands.push(mkEntry(name, pageRef, aliases, pages));
+  if (await saveSettings(`일반 수집 브랜드 추가: ${name}`)) { alert(`📋 '${name}'을(를) 일반 수집 브랜드에 추가했어요.\n다음 전체 수사부터 이 브랜드 광고도 수집해요.`); render(); }
+  else SET.brands.pop();
+}
+async function removeBrand(name) {
+  SET.brands = SET.brands.filter(w => w.name !== name);
+  if (await saveSettings(`일반 수집 해제: ${name}`)) render();
+}
+async function renameAlias(page) {
+  const cur = SET.aliases[page] || guessOf(page) || page;
+  const v = prompt(`'${page}' 계정의 실제 브랜드 이름을 입력하세요.\n(같은 이름을 여러 계정에 주면 하나의 브랜드로 합쳐져요 · 비우면 원래대로)`, cur);
+  if (v === null) return;
+  const name = v.trim();
+  const before = SET.aliases[page];
+  if (!name || name === page) delete SET.aliases[page]; else SET.aliases[page] = name;
+  if (await saveSettings(`브랜드 지정: ${page} → ${name || "(해제)"}`)) { closeModal(); render(); }
+  else { if (before) SET.aliases[page] = before; else delete SET.aliases[page]; }
+}
+async function confirmGuess(page) {
+  const g = guessOf(page); if (!g) return;
+  SET.aliases[page] = g;
+  if (await saveSettings(`브랜드 확정: ${page} → ${g}`)) { closeModal(); render(); } else delete SET.aliases[page];
 }
 async function addKeyword(kw) {
   kw = (kw || "").trim(); if (!kw) return;
@@ -409,13 +670,28 @@ async function showRuns() {
     box.innerHTML = r.workflow_runs.map(x => `<div>${ico(x)} · ${new Date(x.created_at).toLocaleString("ko-KR")} · ${esc(x.display_title)} <a href="${x.html_url}" target="_blank">로그 ↗</a></div>`).join("") || "<div>실행 기록 없음</div>";
   } catch (e) { box.textContent = "실행 기록을 불러오지 못했어요: " + e.message; }
 }
-function saveToken() {
-  const t = $("#tok").value.trim(); if (!t) return;
-  store.set("ghtoken", t); loadSettings().then(render);
+function saveToken() { const t = $("#tok").value.trim(); if (!t) return; store.set("ghtoken", t); loadSettings().then(render); }
+function saveGm() { const t = $("#gm").value.trim(); if (!t) return; store.set("gmkey", t); render(); }
+function accountRows(filter) {
+  const m = {};
+  visibleAds().filter(a => a.source === "sweep").forEach(a => { (m[a.page_name] ??= 0); m[a.page_name]++; });
+  const f = (filter || "").toLowerCase();
+  return Object.entries(m).filter(([p]) => !f || p.toLowerCase().includes(f) || (SET.aliases[p] || "").toLowerCase().includes(f) || (guessOf(p) || "").toLowerCase().includes(f))
+    .sort((x, y) => y[1] - x[1]).slice(0, 60);
+}
+function renderAccounts() {
+  const rows = accountRows($("#acq")?.value);
+  $("#acc").innerHTML = `<table class="tbl-sm" style="width:100%;margin:6px 0 0"><tr><th>광고 계정</th><th>실제 브랜드</th><th>소재</th><th></th></tr>
+    ${rows.map(([p, n]) => { const al = SET.aliases[p], g = guessOf(p), name = al || g || p;
+      return `<tr><td>${esc(p)}</td><td>${al ? `<b>${esc(al)}</b>` : g ? `<span class="guess q">${esc(g)}?</span>` : '<span class="small">-</span>'}</td><td>${n}</td>
+      <td class="act"><button title="실제 브랜드 지정" onclick="renameAlias(${qa(p)})">✏️</button>${g ? `<button title="추측 확정" onclick="confirmGuess(${qa(p)})">✔</button>` : ""}
+      <button title="집중 감시" onclick="addWatch(${qa(name)},'','',${qa(p)})">☆</button><button title="일반 수집" onclick="addBrand(${qa(name)},${qa(p)})">📋</button>
+      <button title="차단" onclick="blockPage(${qa(p)})">🚫</button></td></tr>`; }).join("")}</table>`;
 }
 function renderSettings() {
   const has = !!token();
   const chip = (label, fn) => `<span class="chip">${esc(label)} <button onclick="${fn}">✕</button></span>`;
+  const hits = D.log?.keyword_hits || {};
   $("#view").innerHTML = `<div class="set">
     <div class="panel"><h3>🔑 GitHub 연결 ${has ? "✅" : ""}</h3>
       ${has ? `<p>연결됨 (이 기기에 저장). <a href="#" onclick="store.del('ghtoken');render();return false">연결 해제</a></p>` : `
@@ -424,28 +700,44 @@ function renderSettings() {
       <p>② 만든 키(github_pat_...)를 아래에 붙여넣기</p>
       <input id="tok" type="password" placeholder="github_pat_..." style="width:60%"> <button class="btn" onclick="saveToken()">저장</button>`}
     </div>
+    <div class="panel"><h3>🤖 AI 검색 (Gemini 키) ${store.get("gmkey") ? "✅" : ""}</h3>
+      ${store.get("gmkey") ? `<p>등록됨 (이 기기에만 저장). 위 검색창에 문장으로 검색하면 AI가 일본어 검색어로 바꿔 찾아요. <a href="#" onclick="store.del('gmkey');render();return false">해제</a></p>`
+        : `<p>등록하지 않아도 검색은 되지만, 등록하면 "수분 광채 피부 광고" 같은 문장을 AI가 일본어 검색어로 바꿔줘요. <a href="https://aistudio.google.com/apikey" target="_blank">키 만들기 ↗</a></p>
+      <input id="gm" type="password" placeholder="AIza..." style="width:60%"> <button class="btn" onclick="saveGm()">저장</button>`}
+    </div>
     <div class="panel"><h3>🔍 수사 시작</h3>
       <p>매일 08:37 전체 수사 + 13:07·18:07·22:07 ⚡ 빠른 수사(집중 감시만)가 자동으로 돌아요.</p>
       <div style="display:flex;gap:8px;margin:10px 0"><button class="btn" onclick="runNow('full')">🔍 전체 수사 시작</button><button class="btn sub" onclick="runNow('watch')">⚡ 빠른 수사 (집중 감시만)</button></div>
       <div class="runs" id="runs">${has ? "불러오는 중..." : ""}</div>
     </div>
     <div class="panel"><h3>⭐ 집중 감시 브랜드 (${SET.watch.length})</h3>
-      <p>새 소재를 발견하는 즉시 원본까지 드라이브에 저장해요.</p>
+      <p>새 소재를 발견하는 즉시 원본까지 저장 + 하루 4번 빠른 수사.</p>
       <div class="chips">${SET.watch.map(w => chip(w.name + (w.page_id ? " · ID" : ""), `removeWatch(${qa(w.name)})`)).join("")}</div>
-      <input id="wName" placeholder="브랜드명 (예: VT)" style="width:24%"> <input id="wPage" placeholder="(선택) 광고 라이브러리 링크 또는 페이지 ID" style="width:34%">
-      <input id="wAlias" placeholder="(선택) 다른 표기, 쉼표로 (예: ブイティー)" style="width:26%">
+      <input id="wName" placeholder="브랜드명 (예: VT)" style="width:22%"> <input id="wPage" placeholder="(선택) 광고 라이브러리 링크 또는 페이지 ID" style="width:32%">
+      <input id="wAlias" placeholder="(선택) 다른 표기·계정명, 쉼표로" style="width:26%">
       <button class="btn" onclick="addWatch($('#wName').value,$('#wPage').value,$('#wAlias').value)">추가</button>
     </div>
+    <div class="panel"><h3>📋 일반 수집 브랜드 (${SET.brands.length})</h3>
+      <p>키워드와 상관없이 이 브랜드 광고를 매일 수집해요. 원본은 14일 이상 살아남은 소재만 저장.</p>
+      <div class="chips">${SET.brands.map(w => chip(w.name, `removeBrand(${qa(w.name)})`)).join("") || '<span class="small">아직 없음</span>'}</div>
+      <input id="bName" placeholder="브랜드명" style="width:22%"> <input id="bPage" placeholder="(선택) 광고 라이브러리 링크 또는 페이지 ID" style="width:32%">
+      <input id="bAlias" placeholder="(선택) 다른 표기·계정명, 쉼표로" style="width:26%">
+      <button class="btn" onclick="addBrand($('#bName').value,'',$('#bPage').value,$('#bAlias').value)">추가</button>
+    </div>
+    <div class="panel"><h3>🏷 수집된 광고 계정 → 실제 브랜드</h3>
+      <p>키워드로 발견된 계정이에요. ✏️ 실제 브랜드 지정 (같은 이름을 주면 합쳐져요) · ✔ 추측 확정 · ☆ 집중 감시 · 📋 일반 수집 · 🚫 차단</p>
+      <input id="acq" placeholder="계정·브랜드 검색" oninput="renderAccounts()" style="width:40%"><div id="acc"></div>
+    </div>
     <div class="panel"><h3>🔎 수집 키워드 (${SET.keywords.length})</h3>
-      <p>이 검색어로 일본에서 광고하는 모든 광고주를 수집해요. 원본은 14일 이상 살아남은 소재만 저장.</p>
-      <div class="chips">${SET.keywords.map(k => chip(k, `removeKeyword(${qa(k)})`)).join("")}</div>
+      <p>이 검색어로 일본에서 광고하는 모든 광고주를 수집해요. 숫자는 최근 전체 수사에서 잡힌 일본어 광고 수.</p>
+      <div class="chips">${SET.keywords.map(k => chip(k + (hits[k] !== undefined ? ` · ${hits[k]}` : ""), `removeKeyword(${qa(k)})`)).join("")}</div>
       <input id="kw" placeholder="새 키워드 (예: 美白)" onkeydown="if(event.key==='Enter')addKeyword(this.value)"> <button class="btn" onclick="addKeyword($('#kw').value)">추가</button>
     </div>
     <div class="panel"><h3>🚫 차단한 광고주 (${SET.blocked_pages.length})</h3>
       <p>수집하지 않고, 기존 소재와 드라이브 파일도 다음 수사 때 정리돼요. ✕ 누르면 차단 해제.</p>
       <div class="chips">${SET.blocked_pages.map(b => chip(b, `unblock(${qa(b)})`)).join("") || "<p>없음</p>"}</div>
     </div></div>`;
-  showRuns();
+  renderAccounts(); showRuns();
 }
 </script>
 </body>

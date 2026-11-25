@@ -7,6 +7,7 @@ GraphQL 응답 + 페이지에 박혀 있는 초기 JSON 데이터에서 광고�
 from __future__ import annotations
 
 import json
+import re
 import time
 import urllib.parse
 from datetime import datetime, timezone, timedelta
@@ -20,9 +21,15 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
 
 
-def build_url(comp: dict, country: str) -> str:
+KANA = re.compile(r"[\u3040-\u30ff]")      # 히라가나·가타카나
+DEBUG_PARTNER: list = []                    # 협력 광고 원본 필드 샘플 (data/debug_partnership.json)
+
+
+def build_url(comp: dict, country: str, lang: str | None = "ja") -> str:
     params = {"active_status": "all", "ad_type": "all",
               "country": country, "media_type": "all"}
+    if lang:
+        params["content_languages[0]"] = lang    # 광고 라이브러리 '언어' 필터
     if str(comp.get("page_id") or "").strip():
         params.update(search_type="page", view_all_page_id=str(comp["page_id"]).strip())
     else:
@@ -104,25 +111,48 @@ def normalize(raw: dict) -> dict:
 
     body = _text(snap.get("body")) or (cards[0].get("body") if cards else "") or ""
     title = snap.get("title") or (cards[0].get("title") if cards else "") or ""
-    branded = snap.get("branded_content") or {}
-    partner = branded.get("page_name") if isinstance(branded, dict) else None
+    body = body if isinstance(body, str) else _text(body)
+    title = title if isinstance(title, str) else _text(title)
+    all_text = " ".join([body, title] + [str(c.get("body") or "") + str(c.get("title") or "") for c in cards])
+
+    # 협력 광고: 두 계정 이름이 여러 항목에 나뉘어 들어올 수 있어 전부 모은다
+    page = raw.get("page_name") or snap.get("page_name") or snap.get("current_page_name") or ""
+    branded = snap.get("branded_content") if isinstance(snap.get("branded_content"), dict) else {}
+    names = [raw.get("page_name"), snap.get("page_name"), snap.get("current_page_name"),
+             branded.get("page_name"), branded.get("current_page_name")]
+    accounts = []
+    for n in names:
+        if n and n.strip() and n.strip().lower() not in [a.lower() for a in accounts]:
+            accounts.append(n.strip())
+    partner = next((a for a in accounts if a.lower() != page.strip().lower()), None)
+    if branded and len(DEBUG_PARTNER) < 30:
+        DEBUG_PARTNER.append({"id": str(raw.get("ad_archive_id")), "raw_page_name": raw.get("page_name"),
+                              "snap_page_name": snap.get("page_name"),
+                              "snap_current_page_name": snap.get("current_page_name"),
+                              "byline": snap.get("byline"), "branded_content": branded,
+                              "accounts": accounts, "partner": partner})
+    link = snap.get("link_url") or next((c.get("link_url") for c in cards if c.get("link_url")), "") or ""
 
     ad_id = str(raw.get("ad_archive_id"))
     return {
         "id": ad_id,
         "page_id": str(raw.get("page_id") or snap.get("page_id") or ""),
-        "page_name": raw.get("page_name") or snap.get("page_name") or "",
+        "page_name": page,
         "start_date": _date(raw.get("start_date")),
         "end_date": _date(raw.get("end_date")),
         "is_active": bool(raw.get("is_active")),
         "platforms": raw.get("publisher_platform") or [],
         "collation_count": raw.get("collation_count") or 1,
         "collation_id": str(raw.get("collation_id") or ""),
-        "body": body if isinstance(body, str) else _text(body),
-        "title": title if isinstance(title, str) else _text(title),
+        "body": body,
+        "title": title,
         "cta": snap.get("cta_text") or "",
-        "link_url": snap.get("link_url") or "",
-        "partner": partner,                       # 협력(파트너십) 광고 크리에이터
+        "link_url": link,
+        "link_caption": snap.get("caption") or "",
+        "partner": partner,                       # 협력(파트너십) 광고의 상대 계정
+        "accounts": accounts,
+        "has_text": bool(all_text.strip()),
+        "is_ja": bool(KANA.search(all_text)),
         "display_format": snap.get("display_format") or "",
         "media": media,
         "ad_url": f"https://www.facebook.com/ads/library/?id={ad_id}",
@@ -142,7 +172,8 @@ def _dismiss_cookies(page):
             pass
 
 
-def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5) -> list[dict]:
+def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5,
+                      lang: str | None = "ja", ja_only: bool = True) -> list[dict]:
     raws: list = []
 
     def on_response(resp):
@@ -153,7 +184,7 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5) -> lis
         except Exception:
             pass
 
-    url = build_url(comp, country)
+    url = build_url(comp, country, lang)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
         ctx = browser.new_context(user_agent=UA, locale="ja-JP", timezone_id="Asia/Tokyo",
@@ -196,20 +227,19 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5) -> lis
             continue
         seen.add(ad["id"])
         pages_seen[ad["page_name"]] = pages_seen.get(ad["page_name"], 0) + 1
+        # 일본어 광고만 (문구가 아예 없는 이미지·영상 광고는 예외로 수집)
+        if ja_only and ad["has_text"] and not ad["is_ja"]:
+            continue
         # 키워드 검색일 땐 다른 브랜드/리셀러 광고가 섞이므로 페이지명으로 거름
         if keyword_mode and names:
-            if hit(ad["page_name"]):
-                pass
-            elif ad["partner"] and hit(ad["partner"]):
-                # 크리에이터 페이지로 올라간 협력 광고 → 크리에이터를 partner 로
-                ad["page_name"], ad["partner"] = ad["partner"], ad["page_name"]
-            else:
+            # 광고 계정 또는 협력 상대 계정 중 하나라도 브랜드명과 맞으면 수집
+            if not any(hit(a) for a in ad["accounts"] or [ad["page_name"]]):
                 continue
         if any(x in (ad["page_name"] + " " + (ad["partner"] or "")).lower() for x in EXCLUDE):
             continue          # 우리 브랜드(셀로라바이)는 제외
         # 키워드 발굴(sweep)은 광고주 페이지 이름 자체를 브랜드로 사용
         ad["brand"] = (ad["page_name"] or "(이름없음)") if comp.get("sweep") else comp["name"]
-        ad["source"] = "sweep" if comp.get("sweep") else "watch"
+        ad["source"] = comp.get("tier") or ("sweep" if comp.get("sweep") else "watch")
         ad["keyword"] = comp.get("keyword") if comp.get("sweep") else None
         ads.append(ad)
     scrape_competitor.pages_seen = dict(sorted(pages_seen.items(), key=lambda x: -x[1])[:15])

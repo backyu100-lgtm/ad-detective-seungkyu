@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 import time
@@ -30,26 +31,35 @@ JST = timezone(timedelta(hours=9))
 def load_settings() -> dict:
     p = Path("docs/settings.json")
     s = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
-    s.setdefault("watch", []); s.setdefault("keywords", []); s.setdefault("blocked_pages", [])
+    for k in ["watch", "brands", "keywords", "blocked_pages"]:
+        s.setdefault(k, [])
+    s.setdefault("aliases", {})
     return s
 
 
 def targets(cfg: dict, st: dict, mode: str):
     for c in st["watch"]:
-        c = {"page_id": "", "keyword": c.get("name"), "page_names": [c.get("name", "").lower()], **c}
+        c = {"page_id": "", "keyword": c.get("name"), "page_names": [c.get("name", "").lower()], **c, "tier": "watch"}
         yield c, cfg["scrape"]["max_scrolls"]
     if mode == "watch":          # 빠른 수사: 집중 감시 브랜드만
         return
+    for c in st["brands"]:       # 📋 일반 수집 브랜드
+        c = {"page_id": "", "keyword": c.get("name"), "page_names": [c.get("name", "").lower()], **c, "tier": "brand"}
+        yield c, cfg["scrape"]["max_scrolls"]
     for kw in st["keywords"]:
         yield {"name": f"🔎 {kw}", "keyword": kw, "sweep": True}, cfg["sweeps"].get("max_scrolls", 40)
 
 
-def apply_blocks(db: dict, st: dict, drive):
-    """🚫 차단한 광고주: 수집 기록·썸네일·프레임·드라이브 파일까지 삭제."""
+def apply_blocks(db: dict, st: dict, drive, ja_only: bool = True):
+    """🚫 차단한 광고주 + 일본어가 아닌 광고: 수집 기록·썸네일·프레임·드라이브 파일까지 삭제."""
     blocked = {b.lower() for b in st["blocked_pages"]}
-    if not blocked:
-        return
-    gone = [r for r in db.values() if (r.get("page_name") or "").lower() in blocked]
+    kana = re.compile(r"[\u3040-\u30ff]")
+
+    def not_ja(r):
+        text = (r.get("body") or "") + (r.get("title") or "")
+        return ja_only and r.get("source") != "watch" and text.strip() and not kana.search(text)
+
+    gone = [r for r in db.values() if (r.get("page_name") or "").lower() in blocked or not_ja(r)]
     for rec in gone:
         for f in rec.get("files") or []:
             if drive:
@@ -63,7 +73,7 @@ def apply_blocks(db: dict, st: dict, drive):
             (Path("docs/thumbs") / rec["thumb"]).unlink(missing_ok=True)
         del db[rec["id"]]
     if gone:
-        print(f"🚫 차단 광고주 소재 {len(gone)}개 삭제 (드라이브 휴지통으로 이동)")
+        print(f"🚫 차단 광고주·비일본어 소재 {len(gone)}개 삭제 (드라이브 휴지통으로 이동)")
 
 
 def prune_frames(db: dict):
@@ -100,19 +110,23 @@ def main():
     else:
         print("⚠ 드라이브 키 없음 → 원본 업로드는 건너뜀")
 
-    apply_blocks(db, st, drive)
+    ja_only = cfg.get("japanese_only", True)
+    apply_blocks(db, st, drive, ja_only)
 
     # 1) 수집
     blocked = {b.lower() for b in st["blocked_pages"]}
     for comp, scrolls in targets(cfg, st, mode):
         print(f"🔎 {comp['name']} 수사 중...")
         try:
-            ads = scrape_competitor(comp, cfg.get("country", "JP"), scrolls, cfg["scrape"]["scroll_wait_sec"])
+            ads = scrape_competitor(comp, cfg.get("country", "JP"), scrolls, cfg["scrape"]["scroll_wait_sec"],
+                                    cfg.get("ad_language", "ja") or None, ja_only)
         except Exception:
             traceback.print_exc()
             ads = []
         ads = [a for a in ads if (a.get("page_name") or "").lower() not in blocked]
         new = store.merge(db, None if comp.get("sweep") else comp["name"], ads, today)
+        if comp.get("sweep"):          # 이번 키워드에서 몇 개가 잡혔는지 (빈 키워드 정리용)
+            log.setdefault("keyword_hits", {})[comp["keyword"]] = len(ads)
         pages = getattr(scrape_competitor, "pages_seen", {})
         entry = {"found": len(ads), "new": len(new), "pages_seen": pages}
         (log["sweeps"] if comp.get("sweep") else log["brands"])[comp["name"]] = entry
@@ -133,11 +147,20 @@ def main():
     cap = cfg.get("sweeps", {}).get("max_downloads_per_run", 300)
     queue = [r for r in db.values() if r.get("_media") and not r.get("files")
              and (r.get("source") == "watch" or store.run_days(r, today) >= min_days)]
+    # 협력 광고 원본 필드 샘플 저장 (표기 확인용)
+    from scraper import DEBUG_PARTNER
+    if DEBUG_PARTNER:
+        Path("data/debug_partnership.json").write_text(json.dumps(DEBUG_PARTNER, ensure_ascii=False, indent=1), encoding="utf-8")
     queue.sort(key=lambda r: (r.get("source") != "watch", -store.run_days(r, today)))
     print(f"💾 원본 저장 대상 {len(queue)}개 (이번 실행 최대 {cap}개)")
     for rec in queue[:cap]:
         save_media(rec, rec["_media"], drive, month, today)
     store.save_clean(db)
+
+    # 2-2) 카피 키워드·카테고리·이미지 지문(유사 광고)·랜딩 채널
+    from enrich import enrich, guess_brands
+    print(f"🏷 부가정보 계산 {enrich(db)}개")
+    store.save(db)
 
     # 3) 장수 소재 AI 분석
     provider = cfg["analysis"].get("provider", "gemini")
@@ -180,6 +203,7 @@ def main():
         store.save(db)
 
     prune_frames(db)
+    enrich(db)
     store.save(db)
 
     # 4) 대시보드 데이터
@@ -214,14 +238,18 @@ def save_media(rec: dict, media: list[dict], drive, month: str, today: str):
 
 
 def export(db: dict, cfg: dict, today: str, log: dict):
+    from enrich import guess_brands
     win = cfg["report"]["winning_days"]
     rows = []
     for r in db.values():
+        if r.get("partner") and (r["partner"] or "").lower() == (r.get("page_name") or "").lower():
+            r["partner"] = None          # 자기 자신이 파트너로 잡힌 예전 기록 정리
         d = store.run_days(r, today)
         rows.append({k: r.get(k) for k in [
             "id", "brand", "source", "keywords", "page_name", "start_date", "end_date", "first_seen",
             "last_seen", "is_active", "partner", "collation_count", "body", "title", "cta", "ad_url",
-            "thumb", "files", "media_type", "media_count", "display_format", "duration", "analysis", "analysis_claude", "platforms"]} | {"run_days": d})
+            "thumb", "files", "media_type", "media_count", "display_format", "duration", "accounts",
+            "link_url", "link_caption", "channel", "kw", "cats", "dhash", "analysis", "analysis_claude", "platforms"]} | {"run_days": d})
     week_ago = (datetime.fromisoformat(today) - timedelta(days=7)).date().isoformat()
     summary = {
         "new_today": sum(1 for r in rows if r["first_seen"] == today),
@@ -230,7 +258,7 @@ def export(db: dict, cfg: dict, today: str, log: dict):
         "total": len(rows),
         "brands": len({r["brand"] for r in rows}),
     }
-    out = {"updated": datetime.now(JST).strftime("%Y-%m-%d %H:%M"), "today": today, "winning_days": win, "summary": summary, "log": log, "ads": rows}
+    out = {"updated": datetime.now(JST).strftime("%Y-%m-%d %H:%M"), "today": today, "brand_guess": guess_brands(db), "winning_days": win, "summary": summary, "log": log, "ads": rows}
     pw = vault.password()
     if pw:   # 대시보드 데이터는 비밀번호로 암호화해서 공개
         Path("docs/data.enc.json").write_text(vault.encrypt(out, pw), encoding="utf-8")

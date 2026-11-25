@@ -170,6 +170,14 @@
    "page_names": [
     "medicube"
    ]
+  },
+  {
+   "name": "VT",
+   "page_id": "",
+   "keyword": "VT",
+   "page_names": [
+    "vt"
+   ]
   }
  ],
  "aliases": {

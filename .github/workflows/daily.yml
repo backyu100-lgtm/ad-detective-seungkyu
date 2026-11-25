@@ -19,10 +19,19 @@ concurrency:
   group: daily
   cancel-in-progress: false
 
+env:
+  # 빠른 수사 여부 (예약된 빠른 수사 또는 버튼에서 watch 선택)
+  IS_WATCH: ${{ (github.event_name == 'schedule' && github.event.schedule != '37 23 * * *') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'watch') }}
+
 jobs:
-  investigate:
+  # 1) 수집: 전체 수사는 4대가 나눠서 동시에, 빠른 수사는 1대
+  collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(((github.event_name == 'schedule' && github.event.schedule != '37 23 * * *') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'watch')) && '[0]' || '[0,1,2,3]') }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -36,19 +45,50 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
       - name: 설치
         run: |
-          sudo apt-get update -y -qq && sudo apt-get install -y -qq ffmpeg
           pip install -q -r requirements.txt
           python -m playwright install --with-deps chromium
-      - name: 수사 시작
+      - name: 수집
         env:
-          MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '37 23 * * *' && 'full' || 'watch') || inputs.mode || 'full' }}
+          MODE: ${{ env.IS_WATCH == 'true' && 'watch' || 'full' }}
+        run: python main.py collect --shard ${{ matrix.shard }} --shards ${{ env.IS_WATCH == 'true' && 1 || 4 }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: out/
+          retention-days: 2
+
+  # 2) 합치기 → 대시보드 먼저 갱신 → 원본 저장 → AI 분석 → 최종 갱신
+  process:
+    needs: collect
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: 설치
+        run: |
+          sudo apt-get update -y -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -q -r requirements.txt
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: shard-*
+          path: out/
+          merge-multiple: true
+      - name: 합치기·저장·분석
+        env:
+          MODE: ${{ env.IS_WATCH == 'true' && 'watch' || 'full' }}
           DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-        run: python main.py
+        run: python main.py process
       - name: 기록 저장
         if: always()          # 중간에 오류가 나도 그때까지 모은 기록은 저장
         run: |

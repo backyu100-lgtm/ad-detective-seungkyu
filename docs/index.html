@@ -132,6 +132,7 @@ header,.report,.tabs,.filters,.search,.bp,.set,.qchips{padding-left:12px;padding
   <input id="fText" placeholder="문구·소구점 검색" style="width:140px">
   <label><input id="fPartner" type="checkbox"> 협력 광고만</label>
   <label><input id="fRisk" type="checkbox"> 약기법 주의 숨기기</label>
+  <label title="숨김 처리한 브랜드도 함께 보기"><input id="fShowHidden" type="checkbox" onchange="SHOWHIDDEN=this.checked;refreshBrandList();render()"> 🙈 숨긴 브랜드 보기</label>
   <select id="fSort"><option value="days">게재일수순</option><option value="new">최신 발견순</option></select>
   <span class="count" id="count"></span>
 </section>
@@ -142,7 +143,8 @@ header,.report,.tabs,.filters,.search,.bp,.set,.qchips{padding-left:12px;padding
 
 <script>
 let D = null, VIEW = "ads", LIMIT = 120, TODAY = "", SHA = null, BRAND = null, AIQ = null, TREND = { unit: "week", off: 0 };
-let SET = { watch: [], brands: [], keywords: [], blocked_pages: [], aliases: {} };
+let SET = { watch: [], brands: [], keywords: [], blocked_pages: [], hidden: [], aliases: {} };
+let SHOWHIDDEN = false;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const qa = x => "decodeURIComponent(&quot;" + encodeURIComponent(x ?? "").replace(/'/g, "%27") + "&quot;)";
@@ -194,7 +196,12 @@ function brandLabel(a) {
 }
 const tierIcon = a => a.source === "watch" ? "⭐ " : a.source === "brand" ? "📋 " : "";
 const blockedSet = () => new Set(SET.blocked_pages.map(x => x.toLowerCase()));
-function visibleAds() { const b = blockedSet(); return D.ads.filter(a => !b.has((a.page_name || "").toLowerCase())); }
+const hiddenSet = () => new Set(SET.hidden || []);
+function visibleAds(includeHidden = SHOWHIDDEN) {
+  const b = blockedSet(), h = hiddenSet();
+  return D.ads.filter(a => !b.has((a.page_name || "").toLowerCase()) && (includeHidden || !h.has(brandOf(a))));
+}
+const isHidden = name => hiddenSet().has(name);
 function mtype(a) {
   if ((a.display_format || "").toUpperCase().includes("CAROUSEL") || (a.media_count || 0) > 1) return "carousel";
   return a.media_type === "video" ? "video" : "image";
@@ -301,7 +308,7 @@ function card(a) {
       ${an?.grade ? `<span class="grade g${an.grade}">${an.grade}</span>` : ""}
       ${mtype(a) === "video" ? `<span class="vid">▶ ${a.duration ? Math.round(a.duration) + "초" : "영상"}</span>` : mtype(a) === "carousel" ? `<span class="vid">🗂 ${a.media_count || ""}</span>` : ""}
     </div>
-    <div class="meta"><div class="br">${tierIcon(a)}${brandLabel(a)}<button class="blk" title="관련 없는 광고주 차단" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button></div>
+    <div class="meta"><div class="br">${tierIcon(a)}${brandLabel(a)}<button class="blk" title="관련 없는 광고주 차단 (기록 삭제)" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button><button class="blk" title="${isHidden(brandOf(a)) ? "숨김 해제" : "숨기기 (기록은 보관)"}" onclick="event.stopPropagation();toggleHide(${qa(brandOf(a))})">${isHidden(brandOf(a)) ? "👁" : "🙈"}</button></div>
       <div class="dt">${esc(startOf(a))} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
       <div class="tags">${tags}</div></div></div>`;
 }
@@ -339,7 +346,8 @@ function openModal(id) {
   $("#box").innerHTML = `
     <div class="player">${player}</div>
     <div class="info"><button class="close" onclick="closeModal()">×</button>
-      <button class="btn sub" style="float:right;margin:2px 8px 0 0;padding:5px 10px;font-size:12px" onclick="blockPage(${qa(a.page_name)})">🚫 이 광고주 차단</button>
+      <button class="btn sub" style="float:right;margin:2px 8px 0 0;padding:5px 10px;font-size:12px" onclick="blockPage(${qa(a.page_name)})">🚫 차단</button>
+      <button class="btn sub" style="float:right;margin:2px 6px 0 0;padding:5px 10px;font-size:12px" onclick="toggleHide(${qa(brandOf(a))})">${isHidden(brandOf(a)) ? "👁 숨김 해제" : "🙈 숨기기"}</button>
       <h2>${tierIcon(a)}<a href="#" onclick="openBrand(${qa(brandOf(a))});return false" style="color:inherit">${brandLabel(a)}</a>
         ${an?.grade ? `<span class="grade g${an.grade}" style="position:static;display:inline-grid;vertical-align:middle">${an.grade}</span>` : ""}</h2>
       <div class="small">${a.source === "sweep" ? `<a href="#" onclick="renameAlias(${qa(a.page_name)});return false">✏️ 실제 브랜드 지정</a>${g ? ` · <a href="#" onclick="confirmGuess(${qa(a.page_name)});return false">✔ '${esc(g)}' 맞아요</a>` : ""} · ` : ""}
@@ -476,9 +484,9 @@ function renderPartner() {
 }
 
 // ---------- 브랜드 목록 / 브랜드 페이지 ----------
-function brandGroups() {
+function brandGroups(includeHidden = SHOWHIDDEN) {
   const m = {};
-  visibleAds().forEach(a => (m[brandOf(a)] ??= []).push(a));
+  visibleAds(includeHidden).forEach(a => (m[brandOf(a)] ??= []).push(a));
   return m;
 }
 function tierOfName(b, ads) {
@@ -497,18 +505,20 @@ function renderBrand() {
       nw: ads.filter(a => a.first_seen === TODAY).length, partner: ads.filter(a => a.partner).length,
       vid: ads.filter(a => mtype(a) === "video").length, grades };
   }).sort((a, b) => ({ watch: 2, brand: 1, sweep: 0 }[b.tier] - { watch: 2, brand: 1, sweep: 0 }[a.tier]) || (b.win - a.win) || (b.on - a.on)).slice(0, 200);
-  $("#view").innerHTML = `<p class="small" style="margin:10px 24px 0">브랜드를 누르면 브랜드 페이지가 열려요 · ☆ 집중 감시 · 📋 일반 수집 · ✏️ 실제 브랜드 지정 (상위 200개)</p>
+  const nh = (SET.hidden || []).length;
+  $("#view").innerHTML = `<p class="small" style="margin:10px 24px 0">브랜드를 누르면 브랜드 페이지가 열려요 · 🙈 숨기기 · ☆ 집중 감시 · 📋 일반 수집 · ✏️ 실제 브랜드 지정 (상위 200개)
+      ${nh ? ` · <a href="#" onclick="SHOWHIDDEN=!SHOWHIDDEN;$('#fShowHidden').checked=SHOWHIDDEN;refreshBrandList();render();return false">${SHOWHIDDEN ? "숨긴 브랜드 다시 숨기기" : `🙈 숨긴 브랜드 ${nh}개도 보기`}</a>` : ""}</p>
     <table><tr><th>브랜드</th><th>게재 중</th><th>🏆 위닝</th><th>🆕 오늘</th><th>누적</th><th>영상</th><th>협력</th><th>A/B/C</th><th></th></tr>
-    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${{ watch: "⭐ ", brand: "📋 ", sweep: "" }[r.tier]}${esc(r.b)}</b>
+    ${rows.map(r => `<tr class="click" data-b="${esc(r.b)}"><td><b>${{ watch: "⭐ ", brand: "📋 ", sweep: "" }[r.tier]}${esc(r.b)}</b>${isHidden(r.b) ? ' <span class="tag">🙈 숨김</span>' : ""}
         ${r.g ? ` <span class="guess q">(${esc(r.g)}?)</span>` : ""}${r.pages.length > 1 || (r.pages[0] && r.pages[0] !== r.b) ? `<div class="small">${r.pages.map(esc).join(", ")}</div>` : ""}</td>
       <td>${r.on}</td><td>${r.win}</td><td>${r.nw}</td><td>${r.total}</td><td>${r.vid}</td><td>${r.partner}</td><td>${r.grades.A}/${r.grades.B}/${r.grades.C}</td>
-      <td class="act" onclick="event.stopPropagation()">${r.tier === "sweep" ? `<button title="집중 감시" onclick="addWatch(${qa(r.g || r.b)},'','${""}',${qa(r.pages.join(","))})">☆</button><button title="일반 수집" onclick="addBrand(${qa(r.g || r.b)},${qa(r.pages.join(","))})">📋</button>` : ""}
+      <td class="act" onclick="event.stopPropagation()"><button title="${isHidden(r.b) ? "숨김 해제" : "숨기기 (기록은 보관)"}" onclick="toggleHide(${qa(r.b)})">${isHidden(r.b) ? "👁" : "🙈"}</button>${r.tier === "sweep" ? `<button title="집중 감시" onclick="addWatch(${qa(r.g || r.b)},'','${""}',${qa(r.pages.join(","))})">☆</button><button title="일반 수집" onclick="addBrand(${qa(r.g || r.b)},${qa(r.pages.join(","))})">📋</button>` : ""}
         ${r.pages.length === 1 && r.tier === "sweep" ? `<button title="실제 브랜드 지정" onclick="renameAlias(${qa(r.pages[0])})">✏️</button>${r.g ? `<button title="추측 확정" onclick="confirmGuess(${qa(r.pages[0])})">✔</button>` : ""}` : ""}</td></tr>`).join("")}</table>`;
   document.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => openBrand(tr.dataset.b));
 }
 function openBrand(b) { BRAND = b; closeModal(); setView("brandpage"); }
 function renderBrandPage() {
-  const ads = (brandGroups()[BRAND] || []).sort((x, y) => (startOf(y) || "").localeCompare(startOf(x) || ""));
+  const ads = (brandGroups(true)[BRAND] || []).sort((x, y) => (startOf(y) || "").localeCompare(startOf(x) || ""));
   if (!ads.length) return $("#view").innerHTML = '<p class="empty">이 브랜드의 소재가 없어요.</p>';
   const tier = tierOfName(BRAND, ads), on = ads.filter(a => a.is_active);
   const kw = Object.entries(countKw(ads)).sort((x, y) => y[1] - x[1]).slice(0, 30);
@@ -526,6 +536,7 @@ function renderBrandPage() {
   $("#view").innerHTML = `<div class="bp">
     <div class="top"><button class="tab" onclick="setView('brand')">← 브랜드 목록</button>
       <h2>${{ watch: "⭐ ", brand: "📋 ", sweep: "" }[tier]}${esc(BRAND)}</h2>
+      <button class="btn sub" onclick="toggleHide(${qa(BRAND)})">${isHidden(BRAND) ? "👁 숨김 해제" : "🙈 숨기기"}</button>
       ${tier === "sweep" ? `<button class="btn sub" onclick="addWatch(${qa(BRAND)},'','',${qa(pages.join(","))})">☆ 집중 감시</button><button class="btn sub" onclick="addBrand(${qa(BRAND)},${qa(pages.join(","))})">📋 일반 수집</button>` : ""}
       ${pages.length === 1 && tier === "sweep" ? `<button class="btn sub" onclick="renameAlias(${qa(pages[0])})">✏️ 실제 브랜드 지정</button>` : ""}
       <span class="small">계정: ${pages.map(esc).join(", ")}</span></div>
@@ -558,7 +569,7 @@ async function gh(path, opts = {}) {
   if (!r.ok && r.status !== 204) throw new Error(`GitHub ${r.status}: ${(await r.text()).slice(0, 120)}`);
   return r.status === 204 ? null : r.json();
 }
-function fillSet() { for (const k of ["watch", "brands", "keywords", "blocked_pages"]) SET[k] ??= []; SET.aliases ??= {}; }
+function fillSet() { for (const k of ["watch", "brands", "keywords", "blocked_pages", "hidden"]) SET[k] ??= []; SET.aliases ??= {}; }
 async function loadSettings() {
   try {
     if (token()) {
@@ -579,7 +590,7 @@ async function saveSettings(msg) {
       SHA = r.content.sha; refreshBrandList(); return true;
     } catch (e) {
       if (i === 0 && /409|422/.test(e.message)) { const cur = SET; await loadSettings();
-        for (const k of ["watch", "brands", "keywords", "blocked_pages"]) SET[k] = mergeList(SET[k], cur[k]);
+        for (const k of ["watch", "brands", "keywords", "blocked_pages", "hidden"]) SET[k] = mergeList(SET[k] || [], cur[k] || []);
         SET.aliases = { ...SET.aliases, ...cur.aliases }; continue; }
       alert("저장 실패: " + e.message); return false;
     }
@@ -588,6 +599,15 @@ async function saveSettings(msg) {
 const keyOf = x => typeof x === "string" ? x : x.name;
 const mergeList = (a, b) => { const m = new Map(); [...a, ...b].forEach(x => m.set(keyOf(x), x)); return [...m.values()]; };
 
+async function toggleHide(name) {
+  if (!name) return;
+  const was = isHidden(name);
+  SET.hidden = was ? SET.hidden.filter(x => x !== name) : [...SET.hidden, name];
+  if (await saveSettings(`${was ? "숨김 해제" : "숨기기"}: ${name}`)) {
+    if (!was && VIEW === "brandpage") setView("brand");
+    else { if ($("#modal").classList.contains("on")) closeModal(); refreshBrandList(); render(); }
+  } else SET.hidden = was ? [...SET.hidden, name] : SET.hidden.filter(x => x !== name);
+}
 async function blockPage(name) {
   if (!name) return;
   const n = visibleAds().filter(a => a.page_name === name).length;
@@ -732,6 +752,10 @@ function renderSettings() {
       <p>이 검색어로 일본에서 광고하는 모든 광고주를 수집해요. 숫자는 최근 전체 수사에서 잡힌 일본어 광고 수.</p>
       <div class="chips">${SET.keywords.map(k => chip(k + (hits[k] !== undefined ? ` · ${hits[k]}` : ""), `removeKeyword(${qa(k)})`)).join("")}</div>
       <input id="kw" placeholder="새 키워드 (예: 美白)" onkeydown="if(event.key==='Enter')addKeyword(this.value)"> <button class="btn" onclick="addKeyword($('#kw').value)">추가</button>
+    </div>
+    <div class="panel"><h3>🙈 숨긴 브랜드 (${SET.hidden.length})</h3>
+      <p>화면에서만 숨겨요. 수집과 원본 저장은 계속돼서 언제든 ✕로 다시 볼 수 있어요.</p>
+      <div class="chips">${SET.hidden.map(b => chip(b, `toggleHide(${qa(b)})`)).join("") || '<span class="small">없음</span>'}</div>
     </div>
     <div class="panel"><h3>🚫 차단한 광고주 (${SET.blocked_pages.length})</h3>
       <p>수집하지 않고, 기존 소재와 드라이브 파일도 다음 수사 때 정리돼요. ✕ 누르면 차단 해제.</p>

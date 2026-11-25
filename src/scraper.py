@@ -172,8 +172,25 @@ def _dismiss_cookies(page):
             pass
 
 
+class Browser:
+    """여러 대상을 수집할 때 브라우저를 한 번만 띄워 재사용."""
+    def __enter__(self):
+        self._p = sync_playwright().start()
+        self.browser = self._p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
+        return self
+
+    def __exit__(self, *a):
+        try:
+            self.browser.close()
+        finally:
+            self._p.stop()
+
+
 def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5,
-                      lang: str | None = "ja", ja_only: bool = True) -> list[dict]:
+                      lang: str | None = "ja", ja_only: bool = True, browser: "Browser | None" = None) -> list[dict]:
+    if browser is None:
+        with Browser() as b:
+            return scrape_competitor(comp, country, max_scrolls, wait, lang, ja_only, b)
     raws: list = []
 
     def on_response(resp):
@@ -184,15 +201,17 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5,
         except Exception:
             pass
 
+    def count():
+        return len({r.get("ad_archive_id") for r in raws})
+
     url = build_url(comp, country, lang)
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
-        ctx = browser.new_context(user_agent=UA, locale="ja-JP", timezone_id="Asia/Tokyo",
-                                  viewport={"width": 1366, "height": 900})
+    ctx = browser.browser.new_context(user_agent=UA, locale="ja-JP", timezone_id="Asia/Tokyo",
+                                      viewport={"width": 1366, "height": 900})
+    try:
         page = ctx.new_page()
         page.on("response", on_response)
         page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        time.sleep(4)
+        page.wait_for_timeout(3000)
         _dismiss_cookies(page)
 
         # 페이지에 박혀 있는 첫 묶음 데이터
@@ -206,16 +225,24 @@ def scrape_competitor(comp: dict, country: str, max_scrolls=30, wait=2.5,
         except Exception:
             pass
 
-        stale, last = 0, -1
+        # 스크롤: 새 광고가 들어오면 바로 다음 스크롤 (고정 대기 대신 최대 wait 초까지만 기다림)
+        stale, last = 0, count()
         for _ in range(max_scrolls):
             page.mouse.wheel(0, 6000)
-            time.sleep(wait)
-            n = len({r.get("ad_archive_id") for r in raws})
+            waited = 0.0
+            while waited < wait:
+                page.wait_for_timeout(300)        # 이 동안 응답 이벤트가 처리됨
+                waited += 0.3
+                if count() > last:
+                    page.wait_for_timeout(400)    # 같은 묶음이 마저 들어오도록 잠깐
+                    break
+            n = count()
             stale = stale + 1 if n == last else 0
             last = n
-            if stale >= 3:
+            if stale >= 3:                        # 3번 연속 새 광고 없음 = 끝까지 봄
                 break
-        browser.close()
+    finally:
+        ctx.close()
 
     ads, seen, pages_seen = [], set(), {}
     names = [n.lower() for n in comp.get("page_names") or []]

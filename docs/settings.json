@@ -194,6 +194,14 @@
    "page_names": [
     "aestura"
    ]
+  },
+  {
+   "name": "MEDIHEAL",
+   "page_id": "",
+   "keyword": "MEDIHEAL",
+   "page_names": [
+    "mediheal"
+   ]
   }
  ],
  "aliases": {

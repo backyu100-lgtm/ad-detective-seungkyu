@@ -1,0 +1,18 @@
+{
+ "_설명": "🧰 승규의 도구함 메뉴. url이 비어 있으면 '준비 중'으로 표시돼요.",
+ "groups": [
+  {"name": "업무 도구", "items": [
+   {"icon": "🕵️", "name": "광고 탐정 승규", "desc": "메타 광고 경쟁사 소재 모니터링", "url": "https://backyu100-lgtm.github.io/ad-detective-seungkyu/", "current": true},
+   {"icon": "📈", "name": "Qoo10 랭킹 트래커", "desc": "리투겔 ECM 크림 순위 1시간마다 추적", "url": "https://backyu100-lgtm.github.io/Qoo10rank/"},
+   {"icon": "🔍", "name": "바이럴 계정 파인더", "desc": "일본 큐레이션형 바이럴 계정 탐색", "url": ""},
+   {"icon": "🧪", "name": "피부고민 진단 (日本語)", "desc": "셀로라바이 제품 추천 앙케트", "url": "https://backyu100-lgtm.github.io/celoraby-quiz/"},
+   {"icon": "🧪", "name": "피부고민 진단 (한국어)", "desc": "셀로라바이 제품 추천 앙케트", "url": "https://backyu100-lgtm.github.io/celoraby-quiz/ko/"},
+   {"icon": "⭐", "name": "Qoo10 리뷰 분석기", "desc": "서버 실행형 · 코드 저장소로 이동", "url": "https://github.com/backyu100-lgtm/Review-analyer"},
+   {"icon": "🎁", "name": "사은품 자동 시트", "desc": "큐텐·라쿠텐 금액대별 증정품", "url": ""},
+   {"icon": "💴", "name": "매출 기록 시트", "desc": "매일 오전 매출 기록", "url": ""}
+  ]},
+  {"name": "🎮 놀이터", "items": [
+   {"icon": "🌸", "name": "회귀한 MD가 K뷰티 전설이 되다", "desc": "화장품 브랜드 육성 게임", "url": "https://claude.ai/artifact/Qcy1GJPWwsEDCfGKWRbFgW"}
+  ]}
+ ]
+}

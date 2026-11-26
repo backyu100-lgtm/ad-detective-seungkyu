@@ -66,6 +66,15 @@ a{color:var(--acc)}
 #lock .err{color:var(--c);font-size:12px;min-height:16px}
 .claude{border:1px solid #d9cff7;border-radius:10px;padding:10px 12px;margin-top:12px}
 .claude h3{margin:0 0 4px;font-size:13px;color:var(--acc)}
+.toolbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;margin-left:6px}
+.toolbtn:hover{background:var(--acc2)}
+.tools{padding:22px 24px;max-height:88vh;overflow:auto;grid-column:1/-1}
+.tools h2{margin:0 0 4px;font-size:19px}.tools h3{margin:18px 0 8px;font-size:13px;color:var(--sub)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.tcard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;text-decoration:none;color:var(--ink);background:#fff}
+a.tcard:hover{border-color:var(--acc);background:var(--acc2)}
+.tcard .ic{font-size:24px;line-height:1}.tcard b{font-size:13.5px;display:block}.tcard span{font-size:11.5px;color:var(--sub)}
+.tcard.off{opacity:.55;cursor:default}.tcard.cur{border-color:var(--acc)}
 .search{display:flex;gap:8px;padding:4px 24px 6px}
 .search input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;background:var(--card)}
 .search button{border:0;border-radius:10px;padding:0 16px;background:var(--acc);color:#fff;font-size:13px;cursor:pointer}
@@ -101,6 +110,7 @@ header,.report,.tabs,.filters,.search,.bp,.set,.qchips{padding-left:12px;padding
 </form></div>
 <header>
   <h1>🕵️ 광고 탐정 승규<small>広告探偵スンギュ · META AD LIBRARY JP</small></h1>
+  <button class="toolbtn" onclick="openTools()">🧰 승규의 도구함</button>
   <div class="upd"><span id="upd"></span> · <a href="#" onclick="store.del('adpw');location.reload();return false">잠그기</a></div>
 </header>
 
@@ -311,6 +321,19 @@ function card(a) {
     <div class="meta"><div class="br">${tierIcon(a)}${brandLabel(a)}<button class="blk" title="관련 없는 광고주 차단 (기록 삭제)" onclick="event.stopPropagation();blockPage(${qa(a.page_name)})">🚫</button><button class="blk" title="${isHidden(brandOf(a)) ? "숨김 해제" : "숨기기 (기록은 보관)"}" onclick="event.stopPropagation();toggleHide(${qa(brandOf(a))})">${isHidden(brandOf(a)) ? "👁" : "🙈"}</button></div>
       <div class="dt">${esc(startOf(a))} ~ ${a.is_active ? "게재 중" : esc(a.end_date || "")}${a.collation_count > 1 ? ` · 복제 ${a.collation_count}` : ""}</div>
       <div class="tags">${tags}</div></div></div>`;
+}
+
+// ---------- 🧰 도구함 ----------
+async function openTools() {
+  let T = { groups: [] };
+  try { T = await (await fetch("tools.json?" + Date.now())).json(); } catch (e) { console.warn(e); }
+  $("#box").innerHTML = `<div class="tools"><button class="close" onclick="closeModal()">×</button>
+    <h2>🧰 승규의 도구함</h2><div class="small">누르면 새 창으로 열려요</div>
+    ${T.groups.map(g => `<h3>${esc(g.name)}</h3><div class="tgrid">${g.items.map(t => t.url
+      ? `<a class="tcard ${t.current ? "cur" : ""}" href="${esc(t.url)}" target="_blank" rel="noopener"><div class="ic">${esc(t.icon)}</div><div><b>${esc(t.name)}${t.current ? " · 지금 여기" : ""}</b><span>${esc(t.desc)}</span></div></a>`
+      : `<div class="tcard off"><div class="ic">${esc(t.icon)}</div><div><b>${esc(t.name)}</b><span>${esc(t.desc)} · 🔗 링크 준비 중</span></div></div>`).join("")}</div>`).join("")}
+  </div>`;
+  $("#modal").classList.add("on");
 }
 
 // ---------- 유사 광고 ----------

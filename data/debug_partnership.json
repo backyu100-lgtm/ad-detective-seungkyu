@@ -306,237 +306,237 @@
   "partner": "みみみ"
  },
  {
-  "id": "2238319960064362",
-  "raw_page_name": "Anua Japan",
-  "snap_page_name": "mire_k_23",
+  "id": "3288363094689978",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "taka_mens_beauty",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "taka_mens_beauty"
+  ],
+  "partner": "taka_mens_beauty"
+ },
+ {
+  "id": "1103923392683443",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "みゆ 〜韓国コスメ大好き〜",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "みゆ 〜韓国コスメ大好き〜"
+  ],
+  "partner": "みゆ 〜韓国コスメ大好き〜"
+ },
+ {
+  "id": "1680899480414466",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "dan.biyou",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "dan.biyou"
+  ],
+  "partner": "dan.biyou"
+ },
+ {
+  "id": "1840626247282387",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "yakekuso_dayo",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "yakekuso_dayo"
+  ],
+  "partner": "yakekuso_dayo"
+ },
+ {
+  "id": "3290323267819796",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "daberi_biyou",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "daberi_biyou"
+  ],
+  "partner": "daberi_biyou"
+ },
+ {
+  "id": "29449922451307079",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "hitomi",
+  "snap_current_page_name": null,
+  "byline": "",
+  "branded_content": {
+   "page_id": "117147561350574",
+   "page_is_deleted": false,
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
+  },
+  "accounts": [
+   "Celladix Japan",
+   "hitomi"
+  ],
+  "partner": "hitomi"
+ },
+ {
+  "id": "2316332345903547",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "Senka beauty",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "100213732027223",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/100070984683903/",
-   "page_name": "Anua Japan"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "Anua Japan",
-   "mire_k_23"
+   "Celladix Japan",
+   "Senka beauty"
   ],
-  "partner": "mire_k_23"
+  "partner": "Senka beauty"
  },
  {
-  "id": "1774997146949531",
-  "raw_page_name": "iHerb Promotion",
-  "snap_page_name": "__aiiiia__",
-  "snap_current_page_name": null,
-  "byline": null,
-  "branded_content": {
-   "page_id": "1508726605648041",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/ihbpromotion/",
-   "page_name": "iHerb Promotion"
-  },
-  "accounts": [
-   "iHerb Promotion",
-   "__aiiiia__"
-  ],
-  "partner": "__aiiiia__"
- },
- {
-  "id": "4157676657862934",
-  "raw_page_name": "iHerb Promotion",
-  "snap_page_name": "__aiiiia__",
-  "snap_current_page_name": null,
-  "byline": null,
-  "branded_content": {
-   "page_id": "1508726605648041",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/ihbpromotion/",
-   "page_name": "iHerb Promotion"
-  },
-  "accounts": [
-   "iHerb Promotion",
-   "__aiiiia__"
-  ],
-  "partner": "__aiiiia__"
- },
- {
-  "id": "4609298326066442",
-  "raw_page_name": "Anua Japan",
+  "id": "1510677747685999",
+  "raw_page_name": "Celladix Japan",
   "snap_page_name": "こーき20代男子の垢抜け美容",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "100213732027223",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/100070984683903/",
-   "page_name": "Anua Japan"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "Anua Japan",
+   "Celladix Japan",
    "こーき20代男子の垢抜け美容"
   ],
   "partner": "こーき20代男子の垢抜け美容"
  },
  {
-  "id": "1884458532598171",
-  "raw_page_name": "パーフェクトワンフォーカス",
-  "snap_page_name": "moomie_official",
+  "id": "1178849004574501",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "korean_zusa",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "103739975381777",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/perfectone.focus/",
-   "page_name": "パーフェクトワンフォーカス"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "パーフェクトワンフォーカス",
-   "moomie_official"
+   "Celladix Japan",
+   "korean_zusa"
   ],
-  "partner": "moomie_official"
+  "partner": "korean_zusa"
  },
  {
-  "id": "1831219674590367",
-  "raw_page_name": "Shabon cosme",
-  "snap_page_name": "Shabon cosme",
-  "snap_current_page_name": null,
-  "byline": "",
-  "branded_content": {
-   "page_id": "100213732027223",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/100070984683903/",
-   "page_name": "Anua Japan"
-  },
-  "accounts": [
-   "Shabon cosme",
-   "Anua Japan"
-  ],
-  "partner": "Anua Japan"
- },
- {
-  "id": "2345964529491459",
-  "raw_page_name": "パーフェクトワンフォーカス",
-  "snap_page_name": "sara_sancsm",
+  "id": "2179533279616304",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "taka_mens_beauty",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "103739975381777",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/perfectone.focus/",
-   "page_name": "パーフェクトワンフォーカス"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "パーフェクトワンフォーカス",
-   "sara_sancsm"
+   "Celladix Japan",
+   "taka_mens_beauty"
   ],
-  "partner": "sara_sancsm"
+  "partner": "taka_mens_beauty"
  },
  {
-  "id": "1926866605386869",
-  "raw_page_name": "パーフェクトワンフォーカス",
-  "snap_page_name": "moomie_official",
+  "id": "1126556933326373",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "dan.biyou",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "103739975381777",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/perfectone.focus/",
-   "page_name": "パーフェクトワンフォーカス"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "パーフェクトワンフォーカス",
-   "moomie_official"
+   "Celladix Japan",
+   "dan.biyou"
   ],
-  "partner": "moomie_official"
+  "partner": "dan.biyou"
  },
  {
-  "id": "1624088652830569",
-  "raw_page_name": "ナンバーズイン numbuzin",
-  "snap_page_name": "rorudoll",
+  "id": "1020539990483473",
+  "raw_page_name": "Celladix Japan",
+  "snap_page_name": "hyonskorea",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "104576071511556",
+   "page_id": "117147561350574",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/numbuzinJP/",
-   "page_name": "ナンバーズイン numbuzin"
+   "page_profile_uri": "https://www.facebook.com/100092565452311/",
+   "page_name": "Celladix Japan"
   },
   "accounts": [
-   "ナンバーズイン numbuzin",
-   "rorudoll"
+   "Celladix Japan",
+   "hyonskorea"
   ],
-  "partner": "rorudoll"
+  "partner": "hyonskorea"
  },
  {
-  "id": "1847903396340988",
-  "raw_page_name": "ナンバーズイン numbuzin",
-  "snap_page_name": "rorudoll",
+  "id": "1804951760787784",
+  "raw_page_name": "イニスフリージャパン",
+  "snap_page_name": "生方 澪桜（れお）",
   "snap_current_page_name": null,
   "byline": null,
   "branded_content": {
-   "page_id": "104576071511556",
+   "page_id": "103122077927904",
    "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/numbuzinJP/",
-   "page_name": "ナンバーズイン numbuzin"
+   "page_profile_uri": "https://www.facebook.com/JPinnisfree/",
+   "page_name": "イニスフリージャパン"
   },
   "accounts": [
-   "ナンバーズイン numbuzin",
-   "rorudoll"
+   "イニスフリージャパン",
+   "生方 澪桜（れお）"
   ],
-  "partner": "rorudoll"
- },
- {
-  "id": "4840791239481834",
-  "raw_page_name": "ナンバーズイン numbuzin",
-  "snap_page_name": "okannnohonki.gram",
-  "snap_current_page_name": null,
-  "byline": null,
-  "branded_content": {
-   "page_id": "104576071511556",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/numbuzinJP/",
-   "page_name": "ナンバーズイン numbuzin"
-  },
-  "accounts": [
-   "ナンバーズイン numbuzin",
-   "okannnohonki.gram"
-  ],
-  "partner": "okannnohonki.gram"
- },
- {
-  "id": "1482778160617595",
-  "raw_page_name": "Qoo10 Japan",
-  "snap_page_name": "Nina Utashiro",
-  "snap_current_page_name": null,
-  "byline": null,
-  "branded_content": {
-   "page_id": "117971054942189",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/Qoo10Japan/",
-   "page_name": "Qoo10 Japan"
-  },
-  "accounts": [
-   "Qoo10 Japan",
-   "Nina Utashiro"
-  ],
-  "partner": "Nina Utashiro"
- },
- {
-  "id": "2706052329843634",
-  "raw_page_name": "Qoo10 Japan",
-  "snap_page_name": "Nina Utashiro",
-  "snap_current_page_name": null,
-  "byline": null,
-  "branded_content": {
-   "page_id": "117971054942189",
-   "page_is_deleted": false,
-   "page_profile_uri": "https://www.facebook.com/Qoo10Japan/",
-   "page_name": "Qoo10 Japan"
-  },
-  "accounts": [
-   "Qoo10 Japan",
-   "Nina Utashiro"
-  ],
-  "partner": "Nina Utashiro"
+  "partner": "生方 澪桜（れお）"
  }
 ]
